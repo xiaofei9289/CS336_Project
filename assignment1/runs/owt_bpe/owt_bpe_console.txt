@@ -1,0 +1,27 @@
+===== owt bpe start ===== 
+input=D:\desktop\data\owt_train.txt
+input_size_mib=11368.29
+vocab_size=32000
+desired_num_chunks=32
+special_tokens=['<|endoftext|>']
+
+=== BPE training summary ===
+vocab_entries=32000
+merges=31743
+elapsed_seconds=27947.072
+peak_rss_mib=unavailable
+longest_token_id=25822
+longest_token_bytes_length=64
+longest_token_bytes=b'\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82\xc3\x83\xc3\x82'
+Traceback (most recent call last):
+  File "D:\desktop\train_bpe_tinystories.py", line 251, in <module>
+    main()
+    ~~~~^^
+  File "D:\desktop\train_bpe_tinystories.py", line 244, in main
+    print_token("longest_token", longest_overall)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\desktop\train_bpe_tinystories.py", line 146, in print_token
+    print(f"{label}_decoded={decoded!r}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'gbk' codec can't encode character '\xc3' in position 23: illegal multibyte sequence
+BPE_EXIT=1 

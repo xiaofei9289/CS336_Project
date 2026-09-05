@@ -1,0 +1,12 @@
+Loaded checkpoint iteration: 40000
+Device: mps
+Prompt tokens: 4
+Generated tokens: 123
+Stop reason: EOS
+
+--- generated text ---
+
+Once upon a time, there was a thin cat named Tim. Tim lived in a small house with his best friend, a dog named Sam. They loved to play together all day.
+One day, Tim and Sam saw a big box. "What is that?" asked Tim. "I don't know," said Sam. They decided to open the box and find out what was inside.
+When they opened the box, they found a lot of toys! Tim and Sam were very happy. They played with the toys all day long. And from that day on, they always played together and had lots of fun.
+<|endoftext|>

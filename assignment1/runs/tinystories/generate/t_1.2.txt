@@ -1,0 +1,12 @@
+Loaded checkpoint iteration: 40000
+Device: mps
+Prompt tokens: 4
+Generated tokens: 156
+Stop reason: EOS
+
+--- generated text ---
+
+Once upon a time, there was a thin cat named Tim. Tim lived in a small hut with his best friend, a girl named Amy. They loved to play together all day. One day, while playing, Tim and Amy found a ball in the grass.
+Tim said to Amy, "Let's play with the ball and receive each other a hug!" So, they made their faces Mel chopping the ball many times. They laughed and played together all day long.
+As the sun went down, it was time to go to Amy's hut. Tim and Amy said goodbye to each other. They were very happy because they had so much fun playing with the ball and good friends. And from that day on, they always played together, shivered with joy in their little hut.
+<|endoftext|>

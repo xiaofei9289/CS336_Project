@@ -1,0 +1,47 @@
+TinyStories generation — 2026-09-04 (re-run)
+
+Machine: MacBook Air, MPS
+Checkpoint: runs/tinystories/checkpoint_final.pt (iteration 40000)
+Tokenizer: data/tinystories/tokenizer_train_10k.pkl
+Script: generate.py
+Shared: prompt="Once upon a time" (4 tokens), top-p=0.9, max-tokens=256, seed=42
+Stop: all three runs hit <|endoftext|> before 256 new tokens (allowed by the handout)
+
+Raw stdout:
+  runs/tinystories/generate/t_0.8.txt
+  runs/tinystories/generate/t_0.2.txt
+  runs/tinystories/generate/t_1.2.txt
+
+This MPS re-run is not bit-identical to the earlier desktop CUDA samples.
+
+---------- T=0.8 (main writeup dump) ----------
+Generated tokens: 123
+Stop reason: EOS
+
+Once upon a time, there was a thin cat named Tim. Tim lived in a small house with his best friend, a dog named Sam. They loved to play together all day.
+One day, Tim and Sam saw a big box. "What is that?" asked Tim. "I don't know," said Sam. They decided to open the box and find out what was inside.
+When they opened the box, they found a lot of toys! Tim and Sam were very happy. They played with the toys all day long. And from that day on, they always played together and had lots of fun.
+<|endoftext|>
+
+---------- T=0.2 ----------
+Generated tokens: 146
+Stop reason: EOS
+
+Once upon a time, there was a little girl named Lily. She had a big, soft teddy bear named Mr. Bear. Lily and Mr. Bear were best friends. They played together every day.
+One day, Lily and Mr. Bear went to the park. They saw a big tree with a lot of birds. Lily wanted to feed the birds, so she took out a small, red apple from her bag. She gave the apple to the birds, and the birds ate it.
+After eating the apple, Lily and Mr. Bear went back to play. They ran and jumped in the park. They had so much fun. Lily and Mr. Bear were very happy. They knew they would always be best friends.
+<|endoftext|>
+
+---------- T=1.2 ----------
+Generated tokens: 156
+Stop reason: EOS
+
+Once upon a time, there was a thin cat named Tim. Tim lived in a small hut with his best friend, a girl named Amy. They loved to play together all day. One day, while playing, Tim and Amy found a ball in the grass.
+Tim said to Amy, "Let's play with the ball and receive each other a hug!" So, they made their faces Mel chopping the ball many times. They laughed and played together all day long.
+As the sun went down, it was time to go to Amy's hut. Tim and Amy said goodbye to each other. They were very happy because they had so much fun playing with the ball and good friends. And from that day on, they always played together, shivered with joy in their little hut.
+<|endoftext|>
+
+Notes for writeup (you still write the commentary):
+- Handout: dump at least 256 tokens OR until the first EOS. These three all stop at EOS.
+- Suggested main sample: T=0.8.
+- Two factors that clearly change the dump: temperature (0.2 more repetitive/safe; 1.2 more broken grammar) and top-p (held at 0.9 here).

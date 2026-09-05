@@ -1,0 +1,56 @@
+CS336 A1 TinyStories batch-size sweep
+Machine: desktop RTX 3060 Ti 8GB (8192 MiB)
+Script: D:\desktop\run_bs_sweep.bat
+Model: vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344, RoPE theta 10000
+Params: 22,696,448
+Data: data/tinystories/train.bin (541,229,347), valid.bin (5,465,883)
+Shared opt: max_lr 1e-3, min_lr 1e-4, warmup 500, cosine 10000, steps 10000, seed 42
+Do not overwrite: runs/tinystories
+
+---------- bs=32 baseline (existing main run, NOT this sweep) ----------
+output: runs/tinystories
+batch 32, steps 40000, warmup 2000, cosine 40000 (schedule differs from sweep)
+GPU mem: not sampled this sweep
+step 10000: train 1.630, val 1.656, elapsed 2010 s
+step 40000: train 1.382, val 1.402, elapsed 8079 s
+tokens/step = 32 * 256 = 8192
+
+---------- bs=64 (DONE 2026-09-03 11:54, exit=0) ----------
+output: D:\desktop\runs\bs_64
+local copy: runs/bs_64/training_log.csv
+GPU mem during train: 7970 MiB / 8192 MiB, util 100%
+wall time: 9580 s (~2 h 40 min), ~0.96 s/step
+tokens/step = 64 * 256 = 16384
+tokens in 10000 steps = 163,840,000
+step  2500: val 1.763
+step  5000: val 1.587
+step  7500: val 1.495
+step 10000: train 1.439, val 1.448, grad_norm 0.339, lr 1e-4
+checkpoints on desktop only (not copied): checkpoint_002500/5000/7500/10000/final.pt
+
+---------- bs=128 (DONE 2026-09-04 05:01, exit=0) ----------
+output: D:\desktop\runs\bs_128
+local copy: runs/bs_128/training_log.csv
+started: 2026-09-03 11:54
+GPU mem during train: 7918–7929 MiB / 8192 MiB, util 100%
+OOM: no (fits 8GB)
+wall time: 61630 s (~17 h 7 min), ~6.16 s/step
+tokens/step = 128 * 256 = 32768
+tokens in 10000 steps = 327,680,000
+step  2500: val 1.629
+step  5000: val 1.480
+step  7500: val 1.414
+step 10000: train 1.396, val 1.384, grad_norm 0.245, lr 1e-4
+checkpoints on desktop only (not copied): checkpoint_002500/5000/7500/10000/final.pt
+
+---------- OWT BPE (FAILED 2026-09-04 05:02, then DONE 14:02) ----------
+first attempt: MemoryError from whole-file read of owt_train.txt (11368 MiB)
+retry: 32 chunks, original train_bpe.py, PID 19208, 06:16-14:02
+vocab 32000, merges 31743, elapsed 27947 s (~7 h 46 min)
+peak RSS: unavailable; sampled WS ~1.5 GB
+longest token id 25822, 64 bytes of repeated c3 83 c3 82 (encoding noise)
+process exit 1: GBK print of longest token after pickle already saved
+local: data/owt/tokenizer_train_32k.pkl
+log: runs/owt_bpe/owt_bpe_console.txt
+notes: runs/owt_bpe/notes.txt
+full status: notes/进展记录.md

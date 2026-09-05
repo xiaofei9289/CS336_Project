@@ -1,0 +1,25 @@
+OWT encode — DONE 2026-09-04 21:14 on desktop-pc
+
+Machine: Windows desktop, CPU
+Script: D:\desktop\encode_tinystories.py
+Tokenizer: D:\desktop\data\owt\tokenizer_train_32k.pkl (vocab 32000)
+Log: D:\desktop\logs\owt_encode.log
+Python: none running after TRAIN_EXIT=0
+
+valid  (15:40)
+  D:\desktop\data\owt\valid.bin
+  132,802,196 bytes (126.65 MiB)
+  tokens = 66,401,098  (uint16)
+
+train (15:40–21:14)
+  D:\desktop\data\owt\train.bin
+  total_tokens=2,727,120,452
+  id_min=10  id_max=31999
+  special_token_count=2,399,397
+  file_size_bytes=5,454,240,904  (5201.57 MiB)
+  elapsed_seconds=20013.400  (~5 h 34 min)
+  tokens_per_second=136,265
+  self-checks: memmap / uint16 / id range / special-token count / decode all ok
+
+bytes/token on train: 11,920,511,059 / 2,727,120,452 = 4.3704
+(earlier valid estimate 4.3674 was close; 2.73e9 estimate vs actual 2.727e9)

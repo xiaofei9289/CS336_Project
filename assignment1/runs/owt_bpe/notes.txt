@@ -1,0 +1,31 @@
+OWT BPE 32k (desktop, original train_bpe.py, DONE)
+
+machine: desktop-pc (Windows), D:\desktop
+started: 2026-09-04 06:16
+finished pickle write: 2026-09-04 14:02
+command: train_bpe_tinystories.py --input D:\desktop\data\owt_train.txt --output D:\desktop\data\owt\tokenizer_train_32k.pkl --vocab-size 32000 --desired-num-chunks 32
+path: original cs336_basics.train_bpe (chunked pretok, not heap optimize)
+
+input_size_mib: 11368.29 (11920511059 bytes)
+vocab_entries: 32000
+merges: 31743
+special_tokens: <|endoftext|>
+elapsed_seconds: 27947.072 (~7 h 46 min)
+peak_rss_mib: unavailable (Windows has no resource.ru_maxrss)
+  sampled working set during merge: ~1.5 GB (PID 19208)
+
+longest_token_id: 25822
+longest_token_bytes_length: 64
+longest_ordinary_token: same as longest overall
+longest token is 32x repeating UTF-8 pair c3 83 c3 82 (mojibake-like); not a reasonable English word.
+
+process exit: 1 after pickle save
+  UnicodeEncodeError GBK when printing longest_token_decoded to Windows console
+  pickle round-trip on Mac: vocab=32000, merges=31743, keys vocab/merges/special_tokens/metadata
+
+local copies (from desktop 2026-09-04 14:58):
+  data/owt/tokenizer_train_32k.pkl (730K)
+  runs/owt_bpe/owt_bpe_console.txt (console log; *.log is gitignored)
+  runs/owt_bpe/notes.txt
+
+first attempt 2026-09-04 05:02 failed with MemoryError (whole-file read). This run used 32 special-token-aligned chunks.

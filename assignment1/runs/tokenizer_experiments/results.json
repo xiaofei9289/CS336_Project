@@ -1,0 +1,79 @@
+{
+  "machine": {
+    "hostname": "xiaofeiMacBook-Air.local",
+    "platform": "macOS-26.5-arm64-arm-64bit",
+    "python": "3.12.13"
+  },
+  "tokenizers": {
+    "tiny_stories": "data/tinystories/tokenizer_train_10k.pkl",
+    "owt": "data/owt/tokenizer_train_32k.pkl"
+  },
+  "ten_documents": {
+    "ts_tokenizer_on_10_ts_docs": {
+      "utf8_bytes": 7565,
+      "n_tokens": 1818,
+      "bytes_per_token": 4.161166116611661,
+      "elapsed_seconds": 0.006890874996315688,
+      "tokens_per_second": 263827.1628743841,
+      "bytes_per_second": 1097828.6507946732
+    },
+    "owt_tokenizer_on_10_owt_docs": {
+      "utf8_bytes": 31617,
+      "n_tokens": 6722,
+      "bytes_per_token": 4.703510859863136,
+      "elapsed_seconds": 0.03417504200479016,
+      "tokens_per_second": 196693.2476354472,
+      "bytes_per_second": 925148.8263150749
+    },
+    "ts_tokenizer_on_10_owt_docs": {
+      "utf8_bytes": 31617,
+      "n_tokens": 9883,
+      "bytes_per_token": 3.1991298188809068,
+      "elapsed_seconds": 0.05966674999217503,
+      "tokens_per_second": 165636.6401940126,
+      "bytes_per_second": 529893.1147439135
+    },
+    "owt_tokenizer_on_10_ts_docs": {
+      "utf8_bytes": 7565,
+      "n_tokens": 1863,
+      "bytes_per_token": 4.060654857756307,
+      "elapsed_seconds": 0.018708541989326477,
+      "tokens_per_second": 99580.18113131805,
+      "bytes_per_second": 404360.7462471396
+    }
+  },
+  "matched_corpus_valid": {
+    "ts_tokenizer_on_ts_valid": {
+      "path": "data/TinyStoriesV2-GPT4-valid.txt",
+      "file_size_bytes": 22502601,
+      "utf8_bytes": 22502601,
+      "n_tokens": 5465883,
+      "n_docs": 27631,
+      "bytes_per_token": 4.116919626709902,
+      "elapsed_seconds": 19.35572479199618,
+      "tokens_per_second": 282391.0268790455,
+      "bytes_per_second": 1162581.1609651058
+    },
+    "owt_tokenizer_on_owt_valid": {
+      "path": "data/owt_valid.txt",
+      "file_size_bytes": 289998753,
+      "utf8_bytes": 289998753,
+      "n_tokens": 66401098,
+      "n_docs": 59059,
+      "bytes_per_token": 4.367378879789006,
+      "elapsed_seconds": 307.90678283400484,
+      "tokens_per_second": 215653.24865154852,
+      "bytes_per_second": 941839.4435186599
+    }
+  },
+  "pile_estimate": {
+    "pile_bytes": 885837004800,
+    "pile_gib": 825,
+    "reference_run": "owt_tokenizer_on_owt_valid",
+    "bytes_per_second": 941839.4435186599,
+    "tokens_per_second": 215653.24865154852,
+    "estimated_seconds": 940539.2935026825,
+    "estimated_hours": 261.26091486185624,
+    "estimated_days": 10.885871452577343
+  }
+}

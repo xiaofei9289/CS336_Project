@@ -1,0 +1,69 @@
+tokenizer_experiments — 2026-09-04
+
+Machine: xiaofeiMacBook-Air.local, macOS arm64, Python 3.12.13
+Command: uv run python -u tokenizer_experiments.py
+Wall clock: ~329 s (mostly OWT valid encode)
+Tokenizers:
+  TS 10k  = data/tinystories/tokenizer_train_10k.pkl
+  OWT 32k = data/owt/tokenizer_train_32k.pkl
+Raw JSON: results.json
+Console: console.log
+
+Did NOT encode the 11GB OWT train split. Matched-corpus numbers use valid files.
+
+(a) matched compression (valid)
+
+  TS tokenizer on TinyStories valid
+    path          data/TinyStoriesV2-GPT4-valid.txt
+    file size     22,502,601 bytes (21.46 MiB)
+    utf8_bytes    22,502,601
+    n_docs        27,631
+    n_tokens      5,465,883
+    bytes/token   4.1169
+    elapsed       19.36 s
+    bytes/s       1,162,581
+    tokens/s      282,391
+
+  OWT tokenizer on OpenWebText valid
+    path          data/owt_valid.txt
+    file size     289,998,753 bytes (276.56 MiB)
+    utf8_bytes    289,998,753
+    n_docs        59,059
+    n_tokens      66,401,098
+    bytes/token   4.3674
+    elapsed       307.91 s
+    bytes/s       941,839
+    tokens/s      215,653
+
+(b) 10-document cross (from the start of each train file)
+
+  TS tok  x 10 TS docs     7,565 bytes / 1,818 tokens  = 4.1612 bytes/token
+  OWT tok x 10 OWT docs   31,617 bytes / 6,722 tokens  = 4.7035 bytes/token
+  TS tok  x 10 OWT docs   31,617 bytes / 9,883 tokens  = 3.1991 bytes/token
+  OWT tok x 10 TS docs     7,565 bytes / 1,863 tokens  = 4.0607 bytes/token
+
+  Observation (for writeup):
+  - TS tokenizer on OWT uses 9,883 / 6,722 = 1.47x more tokens (bytes/token drops 4.70 -> 3.20).
+  - OWT tokenizer on TinyStories uses 1,863 / 1,818 = 1.025x more tokens (bytes/token 4.16 -> 4.06).
+  - TinyStories is a narrow domain; a 10k TS vocab still fragments web text.
+    A 32k OWT vocab still covers children's stories almost as well as the native 10k vocab.
+
+(c) throughput and Pile estimate
+
+  Reference rate: OWT tokenizer on owt_valid
+    941,839 bytes/s
+    215,653 tokens/s
+
+  Pile 825 GiB = 825 * 1024^3 = 885,837,004,800 bytes
+    seconds 940,539
+    hours   261.3
+    days    10.89
+
+  Pile 825e9 bytes (if the handout means decimal GB)
+    seconds 875,733
+    hours   243.3
+    days    10.14
+
+  Single-process, this Mac, this tokenizer. Not a real Pile run.
+
+Next (not part of these 4 points): encode OWT train/valid to .bin on the desktop PC.

@@ -1,0 +1,12 @@
+Loaded checkpoint iteration: 40000
+Device: mps
+Prompt tokens: 4
+Generated tokens: 146
+Stop reason: EOS
+
+--- generated text ---
+
+Once upon a time, there was a little girl named Lily. She had a big, soft teddy bear named Mr. Bear. Lily and Mr. Bear were best friends. They played together every day.
+One day, Lily and Mr. Bear went to the park. They saw a big tree with a lot of birds. Lily wanted to feed the birds, so she took out a small, red apple from her bag. She gave the apple to the birds, and the birds ate it.
+After eating the apple, Lily and Mr. Bear went back to play. They ran and jumped in the park. They had so much fun. Lily and Mr. Bear were very happy. They knew they would always be best friends.
+<|endoftext|>

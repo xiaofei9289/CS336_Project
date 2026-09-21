@@ -1,0 +1,10 @@
+Time (%),Total Time (ns),Instances,Avg (ns),Med (ns),Min (ns),Max (ns),StdDev (ns),Style,Range
+86.8,927147935,1,927147935.0,927147935.0,927147935,927147935,0.0,PushPop,:measurement
+13.2,140557847,1,140557847.0,140557847.0,140557847,140557847,0.0,PushPop,:forward
+0.0,416668,1,416668.0,416668.0,416668,416668,0.0,PushPop,:scaled_dot_product_attention
+0.0,181181,1,181181.0,181181.0,181181,181181,0.0,PushPop,:attention_scores
+0.0,128042,1,128042.0,128042.0,128042,128042,0.0,PushPop,:attention_softmax
+0.0,95815,1,95815.0,95815.0,95815,95815,0.0,PushPop,:attention_final_matmul
+0.0,71353,1,71353.0,71353.0,71353,71353,0.0,PushPop,:scores_matmul
+0.0,56123,1,56123.0,56123.0,56123,56123,0.0,PushPop,:scores_mask
+0.0,43683,1,43683.0,43683.0,43683,43683,0.0,PushPop,:scores_scale

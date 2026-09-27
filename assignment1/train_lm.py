@@ -55,6 +55,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--d-ff", type=int, default=384)
     parser.add_argument("--rope-theta", type=float, default=10_000.0)
+    
+    # RMSNorm 消融开关：默认仍使用 RMSNorm
+    parser.add_argument(
+        "--disable-rmsnorm",
+        action="store_true",
+        help="跳过所有 TransformerBlock 的 ln1 / ln2，以及模型的 ln_final。",
+    )
+    
+    # ===== [新增：post-norm] 从这里开始添加 =====
+    parser.add_argument(
+        "--use-post-norm",
+        action="store_true",
+        help=(
+            "将 TransformerBlock 改为子层 -> 残差相加 -> RMSNorm；"
+            "保留最终 ln_final。"
+        ),
+    )
+    # ===== [新增：post-norm] 添加结束 =====
+
+    # ===== [新增：NoPE] 开始 =====
+    parser.add_argument(
+        "--disable-rope",
+        action="store_true",
+        help=(
+            "禁用所有 Attention 中的 RoPE，进行 NoPE 消融；"
+            "保留 causal mask、RMSNorm 和 SwiGLU。"
+            "不能与 --disable-rmsnorm 或 --use-post-norm 同时使用。"
+        ),
+    )
+    # ===== [新增：NoPE] 结束 =====
+
+    # ===== [新增：SiLU FFN] 开始 =====
+    parser.add_argument(
+        "--use-silu-ffn",
+        action="store_true",
+        help=(
+            "使用不带门控的 SiLU 前馈网络替代 SwiGLU；"
+            "中间维度由 --d-ff 指定。"
+            "不能与 --disable-rmsnorm、--use-post-norm "
+            "或 --disable-rope 同时使用。"
+        ),
+    )
+    # ===== [新增：SiLU FFN] 结束 =====
 
     # Optimization.
     parser.add_argument("--batch-size", type=int, default=4)
@@ -106,6 +149,11 @@ def build_model(args: argparse.Namespace, device: torch.device) -> TransformerLM
         rope_theta=args.rope_theta,
         device=device,
         dtype=torch.float32,
+        disable_rmsnorm=args.disable_rmsnorm,  # [新增] 传入消融开关
+        use_post_norm=args.use_post_norm,  # [新增：post-norm]
+        disable_rope=args.disable_rope,  # [新增：NoPE] 将命令行开关传给模型
+        # [新增：SiLU FFN] 将命令行开关传给模型
+        use_silu_ffn=args.use_silu_ffn,
     )
 
 

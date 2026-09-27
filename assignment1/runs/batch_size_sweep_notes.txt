@@ -1,19 +1,48 @@
 CS336 A1 TinyStories batch-size sweep
 Machine: desktop RTX 3060 Ti 8GB (8192 MiB)
-Script: D:\desktop\run_bs_sweep.bat
+Script: D:\desktop\run_bs_sweep.bat (bs_64 / bs_128); D:\desktop\train_lm.py (bs_1 / bs_32)
 Model: vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344, RoPE theta 10000
 Params: 22,696,448
 Data: data/tinystories/train.bin (541,229,347), valid.bin (5,465,883)
 Shared opt: max_lr 1e-3, min_lr 1e-4, warmup 500, cosine 10000, steps 10000, seed 42
 Do not overwrite: runs/tinystories
 
----------- bs=32 baseline (existing main run, NOT this sweep) ----------
+---------- bs=1 (DONE 2026-09-06 18:33, log ends at 10000) ----------
+output: D:\desktop\runs\bs_1
+local copy: runs/bs_1/training_log.csv
+notes: runs/bs_1/notes.txt
+GPU mem: not sampled this run
+wall time: 199.95 s (~3.3 min), ~0.020 s/step
+tokens/step = 1 * 256 = 256
+tokens in 10000 steps = 2,560,000
+step  2500: val 3.419
+step  5000: val 3.104
+step  7500: val 3.059
+step 10000: train 2.959, val 2.777, grad_norm 2.132, lr 1e-4
+checkpoints on desktop only (not copied): checkpoint_002500/5000/7500/10000/final.pt
+
+---------- bs=32 (DONE 2026-09-06 19:17, log ends at 10000) ----------
+output: D:\desktop\runs\bs_32
+local copy: runs/bs_32/training_log.csv
+notes: runs/bs_32/notes.txt
+GPU mem: not sampled this run
+wall time: 2006.68 s (~33.4 min), ~0.201 s/step
+tokens/step = 32 * 256 = 8192
+tokens in 10000 steps = 81,920,000
+step  2500: val 1.915
+step  5000: val 1.737
+step  7500: val 1.589
+step 10000: train 1.558, val 1.574, grad_norm 0.438, lr 1e-4
+checkpoints on desktop only (not copied): checkpoint_002500/5000/7500/10000/final.pt
+
+---------- bs=32 main run (NOT this sweep; keep for TinyStories 40k result only) ----------
 output: runs/tinystories
 batch 32, steps 40000, warmup 2000, cosine 40000 (schedule differs from sweep)
 GPU mem: not sampled this sweep
 step 10000: train 1.630, val 1.656, elapsed 2010 s
 step 40000: train 1.382, val 1.402, elapsed 8079 s
 tokens/step = 32 * 256 = 8192
+tokens in 40000 steps = 327,680,000
 
 ---------- bs=64 (DONE 2026-09-03 11:54, exit=0) ----------
 output: D:\desktop\runs\bs_64

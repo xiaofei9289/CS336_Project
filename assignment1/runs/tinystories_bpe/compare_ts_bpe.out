@@ -1,0 +1,14 @@
+vocab_equal True
+merges_equal True
+special_equal True
+vocab_len 10000 10000
+merges_len 9743 9743
+elapsed_seconds 898.8502046999997 | 100.73948430000019
+peak_rss_mib None | None
+longest_token_id 7160 | 7160
+longest_ordinary_token_id 7160 | 7160
+input_path data\TinyStoriesV2-GPT4-train.txt | data\TinyStoriesV2-GPT4-train.txt
+input_size_bytes 2227753162 | 2227753162
+vocab_size 10000 | 10000
+longest_bytes_equal True
+longest_bytes b' accomplishment'

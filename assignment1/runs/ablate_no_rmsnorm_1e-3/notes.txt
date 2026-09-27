@@ -1,0 +1,37 @@
+TinyStories no-RMSNorm ablation — DONE 2026-09-06 22:14 on desktop-pc
+
+Machine: Windows desktop RTX 3060 Ti 8GB
+Script: D:\desktop\train_lm.py --disable-rmsnorm
+
+Same model / data / schedule as bs_32 sweep EXCEPT RMSNorms skipped in forward
+(ln1, ln2, ln_final modules still exist; disable_rmsnorm=True):
+  vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344, RoPE θ=10000
+  batch 32, steps 10000, warmup 500, cosine 10000, max_lr 1e-3, min_lr 1e-4, seed 42, device cuda
+
+local copy: runs/ablate_no_rmsnorm_1e-3/training_log.csv
+checkpoints on desktop only:
+  D:\desktop\runs\ablate_no_rmsnorm_1e-3\checkpoint_002500/5000/7500/10000/final.pt
+
+wall time: 1948.52 s (~32.5 min), ~0.195 s/step
+tokens/step = 32 * 256 = 8192
+tokens in 10000 steps = 81,920,000
+
+step     train    val     grad
+    1   15.005   16.155   65.57
+  500    2.722    2.756    1.07
+ 2500    2.127    2.085    0.77
+ 5000    1.794    1.865    0.65
+ 7500    1.654    1.665    0.77
+10000    1.611    1.628    0.87
+
+Train spike step 2220: train 342.2, grad 2.84e5; recovered next log step.
+Val spike step 3500: val 18.59; by 4000 val 1.895.
+No NaN/Inf. 1e-3 completed; no lower-LR rerun.
+Same-schedule bs_32 WITH RMSNorm: val@10k 1.574.
+
+Plots: runs/ablate_no_rmsnorm/curve_step.png and log-y / wallclock variants.
+
+Provenance note (verified 2026-09-06): the remote CSV at
+D:\desktop\runs\ablate_no_rmsnorm_1e-3\training_log.csv currently concatenates two complete runs.
+The local CSV above is the clean second segment (elapsed 1948.52 s). Do not aggregate the remote
+CSV without first splitting the two segments.

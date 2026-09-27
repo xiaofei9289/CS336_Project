@@ -1,0 +1,42 @@
+TinyStories LR 1e-1 — DONE 2026-09-06 16:38 on desktop-pc
+
+Machine: Windows desktop RTX 3060 Ti 8GB
+Script: D:\desktop\train_lm.py
+Python: D:\desktop\.venv\Scripts\python.exe (uv cpython-3.13)
+PID: parent 14344 / child 20700
+Started: 2026-09-06 15:44:51
+Finished: 2026-09-06 16:38:42 (checkpoint_final.pt + log)
+Exit: process gone, log ends at iteration 10000 with saved checkpoint_final.pt
+
+Same model as other LR scans: vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344, RoPE θ=10000, params 22,696,448
+Data: data\tinystories\train.bin (541,229,347), valid.bin (5,465,883)
+batch 32, steps 10000, warmup 500, cosine 10000, max_lr 1e-1, min_lr 1e-2, device cuda
+log-interval 10, eval-interval 500, checkpoint-interval 2500
+
+local copies:
+  runs/lr_1e-1/training_log.csv
+  runs/lr_1e-1/console.log
+checkpoints on desktop only (not copied):
+  D:\desktop\runs\lr_1e-1\checkpoint_002500/5000/7500/10000/final.pt
+
+wall time: 3228.55 s (~53.8 min)
+Note: mid-run slowdown ~step 3500–6500 (elapsed 921 s → 2525 s); later ~0.20 s/step again.
+
+step     train    val     elapsed_s
+    1    9.232    9.236         1.8
+  500    4.294    4.310       101.5
+ 2500    4.349    4.341       516.3
+ 5000    4.129    4.202      1818.6
+ 7500    4.000    3.966      2730.0
+10000    3.680    3.719      3228.6
+
+final lr ≈ 1e-2, final grad_norm 0.649
+max train_loss = 9.232 (step 1); min train_loss = 3.577
+max grad_norm = 997.38 at step 9300 (train 3.609); other spikes >50 at 1130, 7700, 8080 (309.6), 8600
+No NaN / Inf; run completed all 10000 steps.
+
+Compared with other 10k scans (same model, batch 32):
+  lr_3e-4  val 1.714
+  lr_3e-3  val 1.836
+  lr_1e-2  val 2.429
+  lr_1e-1  val 3.719   worse, high plateau, not exploding

@@ -17,7 +17,7 @@ peak_rss_mib: unavailable (Windows has no resource.ru_maxrss)
 longest_token_id: 25822
 longest_token_bytes_length: 64
 longest_ordinary_token: same as longest overall
-longest token is 32x repeating UTF-8 pair c3 83 c3 82 (mojibake-like); not a reasonable English word.
+longest token is 16x repeating 4-byte pattern c3 83 c3 82 (mojibake-like); not a reasonable English word.
 
 process exit: 1 after pickle save
   UnicodeEncodeError GBK when printing longest_token_decoded to Windows console

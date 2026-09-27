@@ -1,0 +1,16 @@
+OWT generation — 2026-09-07 (owt_repro checkpoint)
+
+Machine: MacBook Air, MPS
+Checkpoint: runs/owt_repro/checkpoint_final.pt (iteration 40000)
+Tokenizer: data/owt/tokenizer_train_32k.pkl (vocab 32000)
+Script: generate.py (vocab_size read from tokenizer)
+Shared: prompt="Once upon a time" (4 tokens), top-p=0.9, max-tokens=256, seed=42
+This checkpoint is the 2026-09-07 AutoDL reproduction (same command/seed as the
+destroyed first 5090 run). Final train/val matched 4.137590 / 4.157374.
+
+Raw outputs:
+  runs/owt_repro/generate/t_0.8/generation.txt  (256 new tokens, max_tokens)
+  runs/owt_repro/generate/t_0.2/generation.txt  (256 new tokens, max_tokens)
+  runs/owt_repro/generate/t_1.2/generation.txt  (165 new tokens, EOS)
+
+Writeup main dump: T=0.8.

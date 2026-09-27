@@ -1,0 +1,15 @@
+Checkpoint: runs/owt_repro/checkpoint_final.pt
+Tokenizer: data/owt/tokenizer_train_32k.pkl
+Vocabulary size: 32000
+Loaded checkpoint iteration: 40000
+Device: mps
+Prompt: 'Once upon a time'
+Temperature: 0.2
+Top-p: 0.9
+Seed: 42
+Maximum new tokens: 256
+Prompt tokens: 4
+Generated tokens: 256
+EOS token: '<|endoftext|>'
+EOS token ID: 256
+Stop reason: max_tokens

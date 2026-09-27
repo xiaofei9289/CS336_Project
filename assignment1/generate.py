@@ -24,7 +24,8 @@ from cs336_basics.transformer import TransformerLM
 
 
 # These values must exactly match the training configuration.
-VOCAB_SIZE = 10_000
+# 词表大小在 main() 中从 tokenizer 自动读取。
+# 以下结构超参数必须与训练配置一致。
 CONTEXT_LENGTH = 256
 D_MODEL = 512
 NUM_LAYERS = 4
@@ -249,6 +250,16 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("data/tinystories/tokenizer_train_10k.pkl"),
     )
+
+    # 新增：指定后，将原始文本和生成设置保存到这个目录。
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Directory for generation.txt and metadata.txt.",
+    )
+
+    
     parser.add_argument(
         "--device",
         choices=("auto", "cpu", "cuda", "mps"),
@@ -280,10 +291,18 @@ def main() -> None:
         torch.cuda.manual_seed_all(args.seed)
 
     tokenizer, vocab, special_tokens = load_tokenizer(args.tokenizer)
-    if len(vocab) != VOCAB_SIZE:
+
+    # 自动适配 TinyStories 的 10k 或 OWT 的 32k 词表。
+    vocab_size = len(vocab)
+
+    # 模型要求 token ID 连续覆盖 0 到 vocab_size - 1。
+    if vocab_size == 0:
+        raise ValueError("Tokenizer vocabulary is empty.")
+
+    if set(vocab.keys()) != set(range(vocab_size)):
         raise ValueError(
-            f"Tokenizer has {len(vocab)} tokens; the model expects "
-            f"{VOCAB_SIZE}."
+            "Tokenizer token IDs must be contiguous from 0 "
+            f"to {vocab_size - 1}."
         )
 
     if args.eos_token not in special_tokens:
@@ -298,7 +317,7 @@ def main() -> None:
     # load_checkpoint requires an optimizer. Load everything on CPU first, then
     # delete the unused optimizer state before moving the model onto the GPU.
     model = TransformerLM(
-        vocab_size=VOCAB_SIZE,
+        vocab_size=vocab_size,
         context_length=CONTEXT_LENGTH,
         d_model=D_MODEL,
         num_layers=NUM_LAYERS,
@@ -319,7 +338,7 @@ def main() -> None:
     invalid_ids = [
         token_id
         for token_id in prompt_ids
-        if not 0 <= token_id < VOCAB_SIZE
+        if not 0 <= token_id < vocab_size
     ]
     if invalid_ids:
         raise ValueError(f"Prompt produced invalid token ids: {invalid_ids[:10]}")
@@ -339,18 +358,51 @@ def main() -> None:
         and bool(generated_ids)
         and generated_ids[-1] == eos_id
     )
+    stop_reason = "EOS" if stopped_by_eos else "max_tokens"
 
-    print(f"Loaded checkpoint iteration: {iteration}")
-    print(f"Device: {device}")
-    print(f"Prompt tokens: {len(prompt_ids)}")
-    print(f"Generated tokens: {len(generated_ids)}")
-    print(f"Stop reason: {'EOS' if stopped_by_eos else 'max_tokens'}")
+    # 与原脚本的显示内容一致：prompt + 新生成文本。
+    # 直接解码，不做润色、删改或 strip()。
+    raw_text = tokenizer.decode(all_ids)
+
+    metadata = "\n".join(
+        [
+            f"Checkpoint: {args.checkpoint}",
+            f"Tokenizer: {args.tokenizer}",
+            f"Vocabulary size: {vocab_size}",
+            f"Loaded checkpoint iteration: {iteration}",
+            f"Device: {device}",
+            f"Prompt: {args.prompt!r}",
+            f"Temperature: {args.temperature}",
+            f"Top-p: {args.top_p}",
+            f"Seed: {args.seed}",
+            f"Maximum new tokens: {args.max_tokens}",
+            f"Prompt tokens: {len(prompt_ids)}",
+            f"Generated tokens: {len(generated_ids)}",
+            f"EOS token: {args.eos_token!r}",
+            f"EOS token ID: {eos_id}",
+            f"Stop reason: {stop_reason}",
+        ]
+    )
+
+    print(metadata)
     print("\n--- generated text ---\n")
-    print(tokenizer.decode(all_ids))
+    print(raw_text)
 
     if args.show_token_ids:
         print("\n--- generated token ids ---\n")
         print(generated_ids)
+
+    if args.output_dir is not None:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+
+        text_path = args.output_dir / "generation.txt"
+        metadata_path = args.output_dir / "metadata.txt"
+
+        text_path.write_text(raw_text, encoding="utf-8")
+        metadata_path.write_text(metadata + "\n", encoding="utf-8")
+
+        print(f"\nSaved generated text: {text_path}")
+        print(f"Saved generation settings: {metadata_path}")
 
 
 if __name__ == "__main__":

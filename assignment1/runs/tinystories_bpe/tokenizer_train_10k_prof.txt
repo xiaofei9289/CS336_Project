@@ -1,0 +1,73 @@
+total_tt 898.848
+--- tottime ---
+Tue Sep  1 22:03:30 2026    D:\desktop\data\tinystories\tokenizer_train_10k.prof
+
+         1997237016 function calls (1997236996 primitive calls) in 898.848 seconds
+
+   Ordered by: internal time
+   List reduced from 95 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1  575.336  575.336  775.617  775.617 D:\desktop\cs336_basics\bpe.py:104(pretokenize)
+536592168   72.071    0.000   72.071    0.000 {method 'group' of '_regex.Match' objects}
+536592169   63.783    0.000   63.783    0.000 {method 'encode' of 'str' objects}
+    19486   61.110    0.003  114.228    0.006 {built-in method builtins.max}
+538239306   54.239    0.000   54.239    0.000 {method 'append' of 'list' objects}
+369218707   53.118    0.000   53.118    0.000 D:\desktop\cs336_basics\bpe.py:220(<lambda>)
+  2717702    6.520    0.000    6.520    0.000 {method 'join' of 'str' objects}
+        1    2.881    2.881    2.881    2.881 {method 'split' of '_regex.Pattern' objects}
+     9743    2.042    0.000    5.497    0.001 D:\desktop\cs336_basics\bpe.py:278(merge_incrementally)
+        1    1.354    1.354    1.354    1.354 {built-in method _codecs.utf_8_decode}
+        1    1.027    1.027    2.381    2.381 {method 'read' of '_io.TextIOWrapper' objects}
+  2717700    0.963    0.000    0.963    0.000 {method 'finditer' of '_regex.Pattern' objects}
+   277780    0.637    0.000    0.980    0.000 D:\desktop\cs336_basics\bpe.py:226(merge_pairs)
+        1    0.586    0.586  898.702  898.702 D:\desktop\cs336_basics\train_bpe.py:23(train_bpe)
+   615495    0.514    0.000    1.709    0.000 C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\collections\__init__.py:599(__init__)
+   615495    0.490    0.000    1.196    0.000 C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\collections\__init__.py:673(update)
+   615493    0.318    0.000    0.318    0.000 {built-in method _collections._count_elements}
+  1444638    0.307    0.000    0.307    0.000 {method 'add' of 'set' objects}
+  1351526    0.281    0.000    0.281    0.000 {method 'discard' of 'set' objects}
+  3006655    0.205    0.000    0.205    0.000 {built-in method builtins.len}
+   615679    0.183    0.000    0.388    0.000 {built-in method builtins.isinstance}
+        1    0.169    0.169    0.375    0.375 D:\desktop\cs336_basics\bpe.py:170(build_pair_index)
+   306839    0.161    0.000    0.161    0.000 C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\collections\__init__.py:741(__delitem__)
+        1    0.146    0.146  898.848  898.848 D:\desktop\tests\adapters.py:722(run_train_bpe)
+   615493    0.107    0.000    0.204    0.000 <frozen abc>:117(__instancecheck__)
+
+
+--- cumulative ---
+Tue Sep  1 22:03:30 2026    D:\desktop\data\tinystories\tokenizer_train_10k.prof
+
+         1997237016 function calls (1997236996 primitive calls) in 898.848 seconds
+
+   Ordered by: cumulative time
+   List reduced from 95 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.146    0.146  898.848  898.848 D:\desktop\tests\adapters.py:722(run_train_bpe)
+        1    0.586    0.586  898.702  898.702 D:\desktop\cs336_basics\train_bpe.py:23(train_bpe)
+        1  575.336  575.336  775.617  775.617 D:\desktop\cs336_basics\bpe.py:104(pretokenize)
+    19486   61.110    0.003  114.228    0.006 {built-in method builtins.max}
+     9743    0.010    0.000  113.705    0.012 D:\desktop\cs336_basics\bpe.py:206(select_best_pair)
+536592168   72.071    0.000   72.071    0.000 {method 'group' of '_regex.Match' objects}
+536592169   63.783    0.000   63.783    0.000 {method 'encode' of 'str' objects}
+538239306   54.239    0.000   54.239    0.000 {method 'append' of 'list' objects}
+369218707   53.118    0.000   53.118    0.000 D:\desktop\cs336_basics\bpe.py:220(<lambda>)
+  2717702    6.520    0.000    6.520    0.000 {method 'join' of 'str' objects}
+     9743    2.042    0.000    5.497    0.001 D:\desktop\cs336_basics\bpe.py:278(merge_incrementally)
+        1    0.000    0.000    2.881    2.881 D:\desktop\cs336_basics\bpe.py:67(split_on_special_tokens)
+        1    2.881    2.881    2.881    2.881 {method 'split' of '_regex.Pattern' objects}
+        1    1.027    1.027    2.381    2.381 {method 'read' of '_io.TextIOWrapper' objects}
+   615495    0.514    0.000    1.709    0.000 C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\collections\__init__.py:599(__init__)
+        1    0.000    0.000    1.354    1.354 <frozen codecs>:322(decode)
+        1    1.354    1.354    1.354    1.354 {built-in method _codecs.utf_8_decode}
+   615495    0.490    0.000    1.196    0.000 C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\collections\__init__.py:673(update)
+   277780    0.637    0.000    0.980    0.000 D:\desktop\cs336_basics\bpe.py:226(merge_pairs)
+  2717700    0.963    0.000    0.963    0.000 {method 'finditer' of '_regex.Pattern' objects}
+   615679    0.183    0.000    0.388    0.000 {built-in method builtins.isinstance}
+        1    0.169    0.169    0.375    0.375 D:\desktop\cs336_basics\bpe.py:170(build_pair_index)
+   615493    0.318    0.000    0.318    0.000 {built-in method _collections._count_elements}
+  1444638    0.307    0.000    0.307    0.000 {method 'add' of 'set' objects}
+  1351526    0.281    0.000    0.281    0.000 {method 'discard' of 'set' objects}
+
+

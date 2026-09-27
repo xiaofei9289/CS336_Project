@@ -1,0 +1,26 @@
+TinyStories LR 1e0 — STOPPED EARLY 2026-09-06 ~17:00 (user)
+
+Machine: desktop RTX 3060 Ti (observed via ssh 16:51; later ssh to desktop-pc failed to resolve)
+Command (same as lr_1e-1 except lr / out dir):
+  train_lm.py ... --max-iterations 10000 --max-lr 1e0 --min-lr 1e-1 --warmup-iters 500
+  --cosine-cycle-iters 10000 --device cuda --output-dir runs\lr_1e0
+  --log-interval 10 --eval-interval 500 --checkpoint-interval 2500
+PIDs while running: 9368 (venv python) / 18200 (uv cpython-3.13)
+
+Copied to Mac 2026-09-06: runs/lr_1e0/training_log.csv
+Log interval 10; last logged iteration **3900** (did not reach 10000). Last eval at 3500.
+
+step     train     val      grad_norm     elapsed_s
+   1     9.232     9.236    1.17            1.7
+ 500     157.06    183.11   99.8           99.9
+1000     119.63    138.66   105.6         198.7
+1500     276.03    322.81   18918         297.6
+2000     278.00    322.27   75204         396.6
+2500     154.74    145.43   45.0          495.9
+3000     227.79    231.55   98.7          594.8
+3500     321.73    310.03   1.65e6        693.1
+3900     182.61    —        42856         770.5
+
+No NaN/Inf in the CSV. Loss stayed ~15–30x the start (~9.23). Treated as divergent for handout (b).
+
+Do not confuse with lr_1e-1 (plateau val 3.72, finished 10k) or lr_3e-1 (dir existed on desktop, not reviewed).

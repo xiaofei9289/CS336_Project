@@ -2,18 +2,18 @@
 
 Systems and Parallelism · Spring 2026 · Handout Version 26.1.3
 
-> **工作稿：以后只维护本文件**（不再向 `writeup_template.md` / `-1` / `-2` 写入新答案）。合并自上述三份草稿（2026-09-16）；2026-09-17 按附件核对，并在同步 compile JSON、`nvtx_gpu_proj_sum` 与 `flash_benchmarking.csv` 后修订报告口径。未重跑 GPU 实验，也未代写未完成计分分析。题目为中文摘要，不是逐字翻译。
+> **工作稿：以后只维护本文件**（不再向 `writeup_template.md` / `-1` / `-2` 写入新答案）。合并自上述三份草稿（2026-09-16）；此后按实验与代码进展持续修订。题目为中文摘要，不是逐字翻译。
 >
-> 原讲义：[cs336_assignment2_systems.pdf](./cs336_assignment2_systems.pdf)。最终提交要求为 `writeup.pdf` 和 `code.zip`；本文件是报告的 Markdown 编辑源。未代写尚未完成的计分分析。
+> 原讲义：[cs336_assignment2_systems.pdf](./cs336_assignment2_systems.pdf)。最终提交要求为 `writeup.pdf` 和 `code.zip`；本文件是报告的 Markdown 编辑源。
 >
-> 表格可自行扩展，示例行不代表仅需运行这些配置。未运行、OOM、运行失败请分别注明，不要用 0 代替。实现题的答案栏用于记录代码位置和验证结果，不能替代代码提交。
+> **完成度（2026-09-25）**：第 1–8 章计分题正文已齐；第 9 章 Leaderboard（指定 2×B200）未做。表格可自行扩展；未运行、OOM、运行失败请分别注明，不要用 0 代替。实现题的答案栏用于记录代码位置和验证结果，不能替代代码提交。
 >
 > 对应范围：全部 27 道计分 Problem、58 个作答单元（带字母子题分别计数，无字母题各计一个），另附 1 个可选 Triton 反向记录区。环境信息、日志字段和辅助表格是模板补充，不是新增评分题。末尾提供逐题核对表。
 
 
 ### 本次填写范围与证据状态
 
-本稿合并三份草稿中**已经写过**的内容。计时与 nsys 实验在 AutoDL RTX PRO 6000 上跑过；脚本为 `cs336_systems/benchmark.py`；报告与 csv 在 `nsys_reports/`、`nsys_stats/`，数字底表见 `notes/nsys_profile_tables.md`。下面区分已完成段落、仅有汇总表、以及仍待补测。
+本稿合并三份草稿中**已经写过**的内容。计时与 nsys 实验在 AutoDL RTX PRO 6000 上跑过；脚本为 `cs336_systems/benchmark_lm.py`；报告与 csv 在 `nsys_reports/`、`nsys_stats/`，数字底表见 `notes/nsys_profile_tables.md`。下面区分已完成段落、仅有汇总表、以及仍待补测。
 
 | 项目 | 合并后状态 |
 | --- | --- |
@@ -30,31 +30,34 @@ Systems and Parallelism · Spring 2026 · Handout Version 26.1.3
 | flash_backward | 必做仍为 `flash_backward_pytorch`；adapter 的 Triton 入口已换成 `FlashAttentionTritonFull` |
 | 4.2.3 Triton backward | **已实现并通过** check 8 组 + `test_flash_backward_triton`；未重跑 160 组计时 |
 | flash_benchmarking | **160 组已跑完**（156 OK，4 个 PyTorch FP32 L=65536 反向 OOM）；csv `results/flash_benchmarking.csv`。该表 Flash 行为 **Triton 前向 + 编译稠密反向**，不是 4.2.3 的 Full kernel |
-| 第 5–7、9 章 | 未实现；6 个分布式 adapter 仍为 `NotImplementedError` |
+| 第 5 章 DDP | **all-reduce / 三种 DDP 计时 / nsys 截图已写入**；`get_ddp` / `ddp_on_after_backward` 已接 |
+| 第 6 章 Optimizer Sharding | **实现 + pytest + accounting (a)(b)(c) 已写入**；`get_sharded_optimizer` 已接 |
+| 第 7 章 FSDP | **`FullyShardedDataParallel` 已实现**；adapters 已接；`test_fsdp.py` 4 passed；**`fsdp_accounting` (a)(b) 已写入**（nsys：`fsdp_xl_ag.nsys-rep`，截图 `mem_snapshots/fsdp_ag_*.png`） |
 | 第 8 章 | **纸面计算已写入** `alternate_ring_all_reduce` 至 `fsdp_tp_calcs` |
+| 第 9 章 | Leaderboard 未做 |
 
-下文“待补测”表示当前附件无法支持结论，不表示耗时或显存为零；本稿尚不是所有实验完成后的提交终稿。
+下文“待补测”表示个别早章证据仍弱（如 memory (e) stack、6 卡 all-reduce），不表示主线未写。本稿第 1–8 章可作提交底稿；第 9 章与身份字段仍待补。
 
 ## 1. 基本信息与实验环境
 
 第 1 章没有单独计分题。
 
 - 姓名 / 学号：【待填写】
-- 日期 / 提交版本：2026-09-18；核对口径（checkpoint 附件、Flash 计时表与 Full 反向分流）；未重跑 GPU；第 5–9 章仍缺。
-- 代码 commit：【待填写】
+- 日期 / 提交版本：2026-09-25；第 1–8 章正文已齐；第 9 章 Leaderboard（2×B200）未做。
+- 代码 commit：【待填写】（最终打包 `code.zip` 前再填 hash）
 
 | 项目 | 记录 |
 | --- | --- |
-| 当前可用 GPU（用户提供） | 1 × NVIDIA RTX PRO 6000 Blackwell Server Edition（约 97887 MiB / 96 GB） |
-| 各实验实际 GPU / 数量 | AutoDL 单卡 NVIDIA RTX PRO 6000 Blackwell：small/medium/large/xl 分段计时成功；**10B 在默认 batch 4、context 512、FP32 train 下 OOM**（2026-09-16）。 |
-| CPU / 主机内存 / 操作系统 | AutoDL：25 核 CPU，120 GB 内存，Ubuntu 22.04。 |
-| 驱动 / CUDA / cuDNN / NCCL | AutoDL：驱动 595.71.05；`torch.version.cuda` 12.8；cuDNN pip 包 9.19.0.56（随 torch 2.11）。NCCL 待 nsys/多卡时再记。 |
-| Python / PyTorch / Triton / Nsight Systems | AutoDL：Python 3.12.3（miniconda），PyTorch 2.11.0+cu128，Triton 3.6.0。不要 `uv run`。Nsight Systems CLI 2026.5.1；6 组报告见 `nsys_reports/`，csv 见 `nsys_stats/`，底表见 `notes/nsys_profile_tables.md`。writeup 中六组 nsys 的 (a)–(e) 已成段。 |
-| 多卡互联 / 通信后端 | 本章目前单卡；未测。 |
+| 当前可用 GPU（用户提供） | 开发机曾用 1 × NVIDIA RTX PRO 6000 Blackwell（约 96 GB）；多卡实验用 UCloud A800。 |
+| 各实验实际 GPU / 数量 | **单卡**：AutoDL RTX PRO 6000 — 第 2–4 章计时 / nsys / Flash 等；10B 默认配置 FP32 train OOM（2026-09-16）。**多卡**：UCloud **2×A800-SXM4-80GB**（部分 all-reduce 曾用 4×）— 第 5–7 章 DDP、optimizer sharding、FSDP accounting（2026-09-25）。 |
+| CPU / 主机内存 / 操作系统 | AutoDL：25 核 CPU，120 GB 内存，Ubuntu 22.04。UCloud A800 实例：Ubuntu 22.04。 |
+| 驱动 / CUDA / cuDNN / NCCL | AutoDL / A800：驱动约 595.71；`torch.version.cuda` 12.8；cuDNN 随 PyTorch 2.11。多卡训练与 all-reduce 使用 **NCCL**；FSDP 正确性测试本机为 **gloo**。 |
+| Python / PyTorch / Triton / Nsight Systems | AutoDL：Python 3.12（miniconda），PyTorch 2.11.0+cu128，Triton 3.6.0（AutoDL 勿 `uv run`）。A800：`/root/venv-cu128`，PyTorch 2.11.0+cu128。Nsight Systems 2026.5.1；单卡报告见 `nsys_reports/` 与 `nsys_stats/`；多卡另有 `ddp_*.nsys-rep`、`fsdp_xl_ag.nsys-rep`。 |
+| 多卡互联 / 通信后端 | 单节点多卡；`mp.spawn` + `MASTER_ADDR=localhost`；后端 **NCCL**（训练/计时）或 **gloo**（CPU 正确性测试）。 |
 | 随机种子 / 预热 / 测量次数 | `seed=42`。表 1 (b) 为 warmup 5、测量 10。6000 上 small/medium/large/xl 已跑 `--timing stages` 及三种 `--timing total`。10B warmup 首次 forward OOM。(c) 在 6000 上对 small/medium/large/xl 的 `--mode train --timing total` 扫了 warmup 0/1/2/5。 |
-| 计时范围 / 同步方式 / 时间单位 | `timeit.default_timer`，每阶段/每步前后 `torch.cuda.synchronize()`；毫秒；标准差 `statistics.pstdev`。`zero_grad`、初始化、数据生成不计时。 |
-| 显存指标 / 峰值统计区间 / 单位 | 测量区间 `max_memory_allocated` / `max_memory_reserved`，MiB。 |
-| 与讲义指定硬件或设置的差异 | 非 B200。本章计时均来自 AutoDL 6000。表 1 (b)(c) 计时用 `torch.optim.AdamW`；`nsys_profile` 用 `--optimizer-class cs336_basics.optimizer:AdamW`。 |
+| 计时范围 / 同步方式 / 时间单位 | `timeit.default_timer`，每阶段/每步前后 `torch.cuda.synchronize()`；毫秒；标准差 `statistics.pstdev`。`zero_grad`、初始化、数据生成不计时。多卡逐步计时见各章脚本说明。 |
+| 显存指标 / 峰值统计区间 / 单位 | 测量区间 `max_memory_allocated` / `max_memory_reserved`；第 6–7 章 accounting 表用 GiB。 |
+| 与讲义指定硬件或设置的差异 | 非 B200。第 2–4 章主要在 AutoDL 6000；第 5–7 章多卡在 A800。Leaderboard 指定 2×B200，**本次未跑**。表 1 (b)(c) 计时用 `torch.optim.AdamW`；`nsys_profile` 用 `--optimizer-class cs336_basics.optimizer:AdamW`。**AdamW 学习率：** 本稿第 2–4 章已写入的计时 / nsys / compile JSON 均为当时脚本默认 **`lr=1e-4`**。`cs336_systems/benchmark_lm.py` 现已改为默认 **`lr=1e-3`**（与 `torch.optim.AdamW` 及作业 1 AdamW 类默认一致）。讲义未规定该值；optimizer 一步计算量几乎不随 lr 变，**未为改默认而重跑下表**。 |
 
 ### 默认模型配置（讲义 Table 1）
 
@@ -86,9 +89,9 @@ Systems and Parallelism · Spring 2026 · Handout Version 26.1.3
 
 **答案**
 
-- 实现文件与入口：`cs336_systems/benchmark.py`；仓库根目录 `python -m cs336_systems.benchmark`（AutoDL 需 `PYTHONPATH` 含 `cs336-basics` 与仓库根，conda `base`，不要 `uv run`）。
+- 实现文件与入口：`cs336_systems/benchmark_lm.py`；仓库根目录 `python -m cs336_systems.benchmark_lm`（AutoDL 需 `PYTHONPATH` 含 `cs336-basics` 与仓库根，conda `base`，不要 `uv run`）。
 - 三种模式的计时范围：`--mode forward` 只计前向；`--mode forward_backward` 为前向+loss+反向；`--mode train` 再加 `optimizer.step`。`--timing total` 同步后测整段；`--timing stages` 在 forward / loss / backward / optimizer 之间同步，**阶段之和不作端到端**。
-- 运行配置与验证记录：默认 vocab 10000、batch 4、context 512、FP32 参数。AutoDL 已完成 small/medium/large/xl 的 train stages，以及这四档各自三种 `--timing total`。10B 同配置 OOM。(c) 已在 6000 上对 small/medium/large/xl 的 train total 跑 warmup 0/1/2（warmup 5 用 (b)）。
+- 运行配置与验证记录：默认 vocab 10000、batch 4、context 512、FP32 参数。**本稿表中数字对应当时 `--lr 1e-4`**（脚本现默认 `1e-3`，未重跑）。AutoDL 已完成 small/medium/large/xl 的 train stages，以及这四档各自三种 `--timing total`。10B 同配置 OOM。(c) 已在 6000 上对 small/medium/large/xl 的 train total 跑 warmup 0/1/2（warmup 5 用 (b)）。
 
 #### (b) 各模型耗时
 
@@ -100,7 +103,7 @@ Systems and Parallelism · Spring 2026 · Handout Version 26.1.3
 
 **答案**
 
-主表「前向 / 反向 / 优化器」来自 `--mode train --timing stages`。三种脚本模式的端到端时间来自 `--timing total`（small/medium/large/xl 已齐）。完整步骤与「前向+反向」不要用阶段加总。
+主表「前向 / 反向 / 优化器」来自 `--mode train --timing stages`。三种脚本模式的端到端时间来自 `--timing total`（small/medium/large/xl 已齐）。完整步骤与「前向+反向」不要用阶段加总。**备注：本小节及后文沿用此表的数字均在 AdamW `lr=1e-4` 下测得；仓库脚本默认现为 `1e-3`，未重测。**
 
 | 模型 | 前向均值 ± 标准差（ms） | 反向均值 ± 标准差（ms） | 优化器均值 ± 标准差（ms） | 完整步骤均值 ± 标准差（ms） | 状态 |
 | --- | --- | --- | --- | --- | --- |
@@ -375,7 +378,7 @@ train 使用已有的 `nsys_reports/{medium,large}_{len}.nsys-rep`，运行参�
 
 **答案**
 
-精确数学结果为 $1000\times0.01=10$。已在 AutoDL 用 PyTorch 2.11.0 按讲义原代码运行（`python mixed_precision_accumulation.py`），四个 `print` 为：
+精确数学结果为 $1000\times0.01=10$。已在 AutoDL 用 PyTorch 2.11.0 按讲义原代码运行（`python -m cs336_systems.mixed_precision_accumulation`），四个 `print` 为：
 
 ```
 tensor(10.0001)
@@ -438,7 +441,7 @@ LayerNorm 的均值、方差归约及去均值过程容易受到累加舍入和�
 
 **答案**
 
-AutoDL RTX PRO 6000。脚本 `--precision bf16`：参数保持 FP32，`torch.autocast(..., dtype=torch.bfloat16)` 包住 forward 与 loss，backward 在 autocast 外。与 FP32 主表同一口径：`--mode train --timing stages`，warmup 5、测量 10，batch 4、context 512、seed 42，无 `--nvtx`。优化器仍为 `torch.optim.AdamW`（不在本题比较范围内）。
+AutoDL RTX PRO 6000。脚本 `--precision bf16`：参数保持 FP32，`torch.autocast(..., dtype=torch.bfloat16)` 包住 forward 与 loss，backward 在 autocast 外。与 FP32 主表同一口径：`--mode train --timing stages`，warmup 5、测量 10，batch 4、context 512、seed 42，无 `--nvtx`。优化器仍为 `torch.optim.AdamW`（不在本题比较范围内）；**lr 与 FP32 主表相同，为当时的 `1e-4`**。
 
 | 模型 | FP32 前向（ms） | BF16 mixed 前向（ms） | 前向加速比 | FP32 反向（ms） | BF16 mixed 反向（ms） | 反向加速比 | 状态 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -560,7 +563,7 @@ GUI 在 Memory Usage (Context 1) 上：层前 **38.11 GiB**（0.022 s），`laye
 | 4 | `aten::bmm`（SwiGLU / FFN） | 20.00 | 12.0% |
 | 5 | `aten::mul`（FFN） | 20.00 | 12.0% |
 
-五者合计 100.00 MiB，占 $S$ 的 60.2%。占比分母为上述 166.21 MiB；按底层 storage 计，不含已有参数。同一层反向子模块窗口占用净增 $\Delta M=+253.81$ MiB。理论参数梯度：无 bias 多头注意力、三矩阵 SwiGLU、两个 RMSNorm 时 $P_{block}=4d^2+3d\,d_{ff}+2d=104862720$，FP32 `.grad` 为 $4P_{block}/1024^2=400.01953125$ MiB。取 $G=(M_{after}-M_{before})+S=253.81+166.21=420.02$ MiB，比 400.02 MiB 多约 20 MiB（一块 SwiGLU 激活），与反向窗口内仍存活的中间梯度/临时张量相符。**不能默认 warmup 后 `.grad` 仍占用：** 当前 `cs336_systems/benchmark.py` 在 warmup 之后以及测量循环开头都执行 `zero_grad(set_to_none=True)`。若该 nsys 由这一版脚本生成，测量步反向会重新分配 `.grad`；「warmup 后 `.grad` 已存在」只有在当时脚本未把 grad 置 `None` 时才成立。生成该 profile 的脚本版本尚未与仓库逐行核对。
+五者合计 100.00 MiB，占 $S$ 的 60.2%。占比分母为上述 166.21 MiB；按底层 storage 计，不含已有参数。同一层反向子模块窗口占用净增 $\Delta M=+253.81$ MiB。理论参数梯度：无 bias 多头注意力、三矩阵 SwiGLU、两个 RMSNorm 时 $P_{block}=4d^2+3d\,d_{ff}+2d=104862720$，FP32 `.grad` 为 $4P_{block}/1024^2=400.01953125$ MiB。取 $G=(M_{after}-M_{before})+S=253.81+166.21=420.02$ MiB，比 400.02 MiB 多约 20 MiB（一块 SwiGLU 激活），与反向窗口内仍存活的中间梯度/临时张量相符。**不能默认 warmup 后 `.grad` 仍占用：** 当前 `cs336_systems/benchmark_lm.py` 在 warmup 之后以及测量循环开头都执行 `zero_grad(set_to_none=True)`。若该 nsys 由这一版脚本生成，测量步反向会重新分配 `.grad`；「warmup 后 `.grad` 已存在」只有在当时脚本未把 grad 置 `None` 时才成立。生成该 profile 的脚本版本尚未与仓库逐行核对。
 
 ## 3. Single-GPU Memory
 
@@ -641,7 +644,7 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-口径：AutoDL RTX PRO 6000（94.97 GiB），`cs336_basics.model.scaled_dot_product_attention`，FP32，TF32 关，B=8，Q/K/V `(8,L,d)`，无 mask、无多头。warmup 10，测量 100 次前向 + 100 次反向，每次前后 `torch.cuda.synchronize()`。显存是反向开始前 `memory_allocated` 的 100 次均值（不是 reserved，也不是 peak）。每组独立子进程。脚本 `cs336_systems/pytorch_attention.py`；csv `results/pytorch_attention_float32.csv`。时间单位 ms，显存单位 MiB。
+口径：AutoDL RTX PRO 6000（94.97 GiB），`cs336_basics.model.scaled_dot_product_attention`，FP32，TF32 关，B=8，Q/K/V `(8,L,d)`，无 mask、无多头。warmup 10，测量 100 次前向 + 100 次反向，每次前后 `torch.cuda.synchronize()`。显存是反向开始前 `memory_allocated` 的 100 次均值（不是 reserved，也不是 peak）。每组独立子进程。脚本 `cs336_systems/benchmark_pytorch_attention.py`；csv `results/pytorch_attention_float32.csv`。时间单位 ms，显存单位 MiB。
 
 下表为全部 20 组。
 
@@ -686,7 +689,7 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-口径与上一题相同：B=8，FP32，TF32 关，warmup 10、测量 100，独立子进程。原始列为 `results/pytorch_attention_float32.csv`；编译列为 `python -m cs336_systems.pytorch_attention --compile`（Inductor，`fullgraph=True`），csv `results/compiled_attention_float32.csv`。下表用完整 20 组，不用 smoke。
+口径与上一题相同：B=8，FP32，TF32 关，warmup 10、测量 100，独立子进程。原始列为 `results/pytorch_attention_float32.csv`；编译列为 `python -m cs336_systems.benchmark_pytorch_attention --compile`（Inductor，`fullgraph=True`），csv `results/compiled_attention_float32.csv`。下表用完整 20 组，不用 smoke。
 
 | d | 长度 | 原始前向（ms） | 编译前向（ms） | 原始反向（ms） | 编译反向（ms） | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -993,6 +996,8 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 ## 5. Distributed Data Parallel Training
 
+实验机：UCloud 单节点 4×A800-SXM4-80GB（正式 NCCL 计时只用 2 或 4 进程）；PyTorch 2.11.0+cu128；`notes/a800_4gpu.md`；csv `results/a800_all_reduce_results.csv`。
+
 ### distributed_communication_single_node — Distributed Communication (Single Node)（5 分）
 
 讲义第 32 页。
@@ -1003,19 +1008,21 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 脚本位置 / 后端 / 各 rank 统计方式：【待填写】
-- 实际硬件与未完成的配置：【待填写】
+- 脚本位置 / 后端 / 各 rank 统计方式：`cs336_systems/benchmark_distributed_communication.py`；正式表用 NCCL。每配置预热 5、测量 10；各 rank 先对自己的平均耗时再跨 rank 取平均与最大；1024 MB 按脚本定义为 \(1024\times 1024^{2}\) 字节。
+- 实际硬件与未完成的配置：4×A800-SXM4-80GB，2/4 进程已测。机器只有 4 卡，**6 进程未测**（表中记未测）。
+
+表中为跨 rank 平均耗时（ms）；同配置下 max 与 avg 几乎相同，原始 avg/max 见 `results/a800_all_reduce_results.csv`。
 
 | 数据量 | 2 GPU / 进程（ms） | 4 GPU / 进程（ms） | 6 GPU / 进程（ms） |
-| --- | --- | --- | --- |
-| 1MB | 待填写 | 待填写 | 待填写 |
-| 10MB | 待填写 | 待填写 | 待填写 |
-| 100MB | 待填写 | 待填写 | 待填写 |
-| 1GB | 待填写 | 待填写 | 待填写 |
+| --- | ---: | ---: | --- |
+| 1MB | 0.1936 | 0.2631 | 未测 |
+| 10MB | 1.5163 | 1.9320 | 未测 |
+| 100MB | 14.1317 | 18.9171 | 未测 |
+| 1GB（1024 MB） | 141.9338 | 192.6085 | 未测 |
 
-图（如有）：【待插入】
+图（如有）：未另作图；上表与 csv 一致。
 
-分析：【待填写】
+分析：同一数据量下 4 进程比 2 进程更慢（1 MB 约 +0.07 ms，1024 MB 约 142→193 ms），符合更多参与者带来的集合通信开销。2 进程下从 1 MB 到 1024 MB 时间约增 733 倍，与字节数倍数接近，大消息时大致带宽受限。各 rank 平均几乎一致，说明单节点内同步良好。
 
 ### naive_ddp — Naïve DDP（5 分）
 
@@ -1027,9 +1034,9 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 实现文件与入口：【待填写】
-- Adapter：【待填写】
-- 测试结果与日志：【待填写】
+- 实现文件与入口：`cs336_systems/ddp.py` 中 `DDPNaive`（反向结束后逐参数 all-reduce）；同文件还有计时用的 `DDPBatch`（展平）与 `DDPOverlapIndividualParameters`（重叠）。基准入口 `cs336_systems/benchmark_ddp.py --mode naive`。
+- Adapter：`tests/adapters.py` 的 `get_ddp` 返回重叠版 `DDPOverlapIndividualParameters`（测试与讲义重叠题共用）；`ddp_on_after_backward` 调用 `finish_gradient_synchronization`。朴素版由 benchmark 的 `--mode naive` 直接构造，不经 `get_ddp`。
+- 测试结果与日志：Mac 上 `uv run pytest tests/test_ddp.py` 曾通过（Gloo）；A800 上 NCCL 的 `--mode naive` xl 计时正常结束（见下节）。未单独保存 pytest 日志文件。
 
 ### naive_ddp_benchmarking — Naïve DDP Benchmarking（3 分）
 
@@ -1041,11 +1048,11 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 实验设置 / 计时范围：【待填写】
+- 实验设置 / 计时范围：单节点 2×A800，NCCL，`benchmark_ddp.py --mode naive`；xl（\(d=2560\)，32 层，32 头，\(d_{\mathrm{ff}}=10240\)），vocab 10000，batch 4，context 512；预热 5、测量 10。完整一步含前向、反向、梯度同步、`optimizer.step`；梯度通信为反向之后、`step` 之前的逐参数 all-reduce 墙钟。
 
 | 配置 | 每步时间（ms） | 梯度通信时间（ms） | 通信占比 |
-| --- | --- | --- | --- |
-| 1 node × 2 GPUs，xl | 待填写 | 待填写 | 待填写 |
+| --- | ---: | ---: | ---: |
+| 1 node × 2 GPUs，xl | 3483.7 | 2222.1 | 63.8% |
 
 ### minimal_ddp_flat_benchmarking — Minimal DDP with Flat Gradients Benchmarking（2 分）
 
@@ -1057,12 +1064,14 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-| 实现 | 每步时间（ms） | 梯度通信时间（ms） |
-| --- | --- | --- |
-| 逐参数 all-reduce | 待填写 | 待填写 |
-| 单个展平张量 all-reduce | 待填写 | 待填写 |
+同一设置；`--mode batch_ddp`（`DDPBatch`）。
 
-比较：【待填写】
+| 实现 | 每步时间（ms） | 梯度通信时间（ms） |
+| --- | ---: | ---: |
+| 逐参数 all-reduce | 3483.7 | 2222.1 |
+| 单个展平张量 all-reduce | 3453.3 | 2192.0 |
+
+比较：展平后一步只少约 30 ms（3483.7→3453.3），同步时间同样少约 30 ms。大模型上多次小 all-reduce 的启动开销相对总通信时间不大，展平收益有限；通信仍约占一步约 63%。
 
 ### ddp_overlap_individual_parameters — DDP with Overlapping Individual Parameters（5 分）
 
@@ -1076,8 +1085,8 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 实现文件 / 接口 / Adapter：【待填写】
-- 测试次数、结果与日志：【待填写】
+- 实现文件 / 接口 / Adapter：`cs336_systems/ddp.py` 的 `DDPOverlapIndividualParameters`（初始化广播参数；反向过程中逐参数异步通信；`finish_gradient_synchronization` 在 `optimizer.step` 前等待）。`get_ddp` → 该类；`ddp_on_after_backward` → `finish_gradient_synchronization`。
+- 测试次数、结果与日志：Mac 上 `tests/test_ddp.py`（Gloo）通过；A800 上 `--mode overlap_params` xl 正式计时正常结束。未按讲义建议连跑 5 次独立 pytest；稳定性以该次 NCCL 计时与一次本地 pytest 为准。
 
 ### ddp_overlap_individual_parameters_benchmarking — DDP Overlapping Individual Parameters Benchmarking（1 分）
 
@@ -1091,13 +1100,15 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-| 实现 | 每步时间（ms） |
-| --- | --- |
-| 基础 DDP：逐参数通信 | 待填写 |
-| 基础 DDP：展平通信 | 待填写 |
-| 逐参数通信与反向重叠 | 待填写 |
+同一 2×A800 / xl / NCCL 设置；重叠模式不单独报告「同步时段」墙钟（通信已埋在反向中）。
 
-比较：【待填写】
+| 实现 | 每步时间（ms） |
+| --- | ---: |
+| 基础 DDP：逐参数通信 | 3483.7 |
+| 基础 DDP：展平通信 | 3453.3 |
+| 逐参数通信与反向重叠 | 2753.9 |
+
+比较：重叠相对逐参数约少 730 ms（约 1.26×）。展平几乎不改一步时间；与反向重叠才能明显吃掉原先串在反向之后的通信。
 
 #### (b) 时间线证据
 
@@ -1107,8 +1118,19 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 初始 DDP 截图及图注：【待插入】
-- 重叠 DDP 截图及图注：【待插入】
+同一配置下 `nsys profile --trace cuda,nvtx`；报告 `nsys_reports/ddp_naive.nsys-rep`、`ddp_overlap.nsys-rep`。下列截图来自本机 Nsight Systems GUI（全貌见同目录 `*_overview.png`）。
+
+初始（朴素）DDP：
+
+![naive DDP Nsight timeline](mem_snapshots/ddp_naive_timeline.png)
+
+图注：朴素 DDP 放大时间线（约 49–50 s）。CUDA HW 持续有核；主线程出现长段 `cudaDeviceSynchronize`，NCCL/同步相对计算更偏串行收尾，与「反向完成后再通信」一致。
+
+重叠 DDP：
+
+![overlap DDP Nsight timeline](mem_snapshots/ddp_overlap_timeline.png)
+
+图注：重叠 DDP 放大时间线（约 40 s）。CUDA HW 持续忙碌的同时，进程时间线上可见与计算并发的通信相关活动；全貌图 `ddp_overlap_overview.png` 中约 35–70 s 区间 CUDA HW 与 NCCL 行同时有活动，与逐参数异步重叠相符。
 
 ## 6. Optimizer State Sharding
 
@@ -1124,9 +1146,9 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 实现文件与入口：【待填写】
-- Adapter：【待填写】
-- 测试次数、结果与日志：【待填写】
+- 实现文件与入口：`cs336_systems/optimizer_state_sharding.py` 中的 `OptimizerStateSharding`（继承 `torch.optim.Optimizer`；构造时调用父类；本地持有底层 `optimizer_cls`；`step` 后同步已更新参数）。
+- Adapter：`tests/adapters.py` 的 `get_sharded_optimizer` 返回 `OptimizerStateSharding(params, optimizer_cls, **kwargs)`。
+- 测试次数、结果与日志：本机 `uv run pytest tests/test_sharded_optimizer.py -q`，`ToyModel` 与 `ToyModelWithTiedWeights` 均 PASSED；连跑至少 4 次（各约 2.5–2.8 s）均 2 passed。未单独保存 pytest 日志文件。
 
 ### optimizer_state_sharding_accounting — Optimizer State Sharding Accounting（5 分）
 
@@ -1140,16 +1162,26 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
+实验：UCloud 2×A800-SXM4-80GB，xl（\(d=2560\)，32 层，32 头，\(d_{\mathrm{ff}}=10240\)），vocab 10000，batch 4，context 512；脚本 `cs336_systems/benchmark_optimizer_sharding.py --mode memory`（`mp.spawn`，NCCL）。底表：`notes/a800_4gpu.md`、`results/a800_optimizer_sharding_accounting.txt`。
+
+**实测（仅此表为仪器读数）**：rank0 `torch.cuda.max_memory_allocated`（GiB）。实验开始 `reset_peak_memory_stats` **一次**，三点是此后的**累计高水位**，不是该瞬间的分项占用，也不是彼此独立的瞬时快照。
+
 | 设置 | 初始化后峰值（GiB） | 更新前峰值（GiB） | 更新后峰值（GiB） |
-| --- | --- | --- | --- |
-| 不分片 | 待填写 | 待填写 | 待填写 |
-| 优化器状态分片 | 待填写 | 待填写 | 待填写 |
+| --- | ---: | ---: | ---: |
+| 不分片 | 12.817 | 40.155 | 63.677 |
+| 优化器状态分片 | 12.817 | 40.155 | 44.926 |
 
-| 设置 / 阶段 | 参数 | 梯度 | 优化器状态 | 激活 / 其他 | 单位 |
-| --- | --- | --- | --- | --- | --- |
-| 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
+**组成（估算，非 profiler 分项）**：未分别测量参数/梯度/OS/激活。下表用 \(P\approx 12.8\)（init 峰）以及「梯度 \(\approx P\)、Adam 两份状态 \(\approx 2P\)」的公式，再拿相邻峰值的**差**反推余项；「激活/其他」含激活与 allocator 高水位，**不能**读成同一时刻四项相加等于该阶段峰值。
 
-峰值统计区间与分析：【待填写】
+| 设置 / 阶段 | 参数（估） | 梯度（估） | 优化器状态（估） | 余项怎么来 | 单位 |
+| --- | ---: | ---: | ---: | --- | --- |
+| 不分片 · init | \(P\approx 12.8\) | \(\approx 0\)（尚未反向） | \(\approx 0\)（尚未 `step`） | 余项很小 | GiB |
+| 不分片 · step 前 | \(P\) | \(\approx P\) | \(\approx 0\) | \(40.2-P-P\approx 14.5\)（激活等） | GiB |
+| 不分片 · step 后 | \(P\) | \(\approx P\) | \(\approx 2P\)（用 \(63.7-40.2\approx 23.5\) 对照） | 差里还可能含 `step` 临时缓冲 | GiB |
+| 分片 · init / step 前 | 与上相同 | 同左 | 同左 | 实测峰与不分片相同 | GiB |
+| 分片 · step 后 | \(P\) | \(\approx P\) | \(<2P\)（未直接测到） | 总峰 44.9，较不分片 63.7 低 **18.8** | GiB |
+
+分析：init 与 step 前两边峰值相同，与「OS 分片不改参数/反向阶段」一致（Adam state 多在首次 `step` 才分配）。**可直接引用的测量结论**是 step 后 63.7→44.9、约省 **18.8 GiB**，量级符合每卡 OS 约 \(1/N\)；上表只用来解释这个差，不是四项实测。
 
 #### (b) 训练速度
 
@@ -1159,12 +1191,14 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-| 设置 | 每步时间（ms） |
-| --- | --- |
-| 不分片 | 待填写 |
-| 优化器状态分片 | 待填写 |
+同一硬件与 xl 配置；`--mode timing`，warmup 5、测量 10；一步含 `zero_grad` → forward → backward → `optimizer.step()`（分片版 step 内含参数 broadcast）。
 
-分析：【待填写】
+| 设置 | 每步时间（ms） |
+| --- | ---: |
+| 不分片 | 2714.254 |
+| 优化器状态分片 | 3353.776 |
+
+分析：分片约慢 **23.6%**（+640 ms/step）。本地只更新所属参数后需 `broadcast` 同步权重，额外集合通信抬高了一步时间；换来的是 (a) 中 step 后约 19 GiB 的显存节省。`barrier`/`device_id` 警告不影响计时结束。
 
 #### (c) 与 ZeRO Stage 1 的比较
 
@@ -1174,7 +1208,7 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-【待填写；注明参考文献中的对应位置】
+内存上，本实现与 ZeRO-DP Stage 1（\(P_{os}\)）同类：按 DP rank 切开优化器状态，参数（及 Stage 1 下的梯度）仍每卡一份，显存收益主要来自 OS 的 \(1/N\)（见 [5]）。**通信量**上，[5] 对仅分片优化器状态的 Stage 1 的结论是：省内存，但集合通信**体积与普通数据并行同类**（梯度仍按完整 \(G\) 做 all-reduce 量级），并不靠少传梯度来省带宽。这不等于本作业与 ZeRO-1 使用同一套原语或调度：本实现在本地更新所属分片后对参数做 **逐参数 `broadcast`**；ZeRO-1 面向完整 DP，通常仍是 **梯度 all-reduce**，并用 **参数 all-gather（或等价）** 恢复各卡下一轮权重。二者内存档位相近，通信体积都应理解为「DP 量级」，但操作与时序不同，不能把作业里的 broadcast 写成 ZeRO-1 的通信。
 
 ## 7. Fully-Sharded Data Parallel
 
@@ -1194,9 +1228,17 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 实现文件与入口：【待填写】
-- Adapter：【待填写】
-- 测试次数、结果与日志：【待填写】
+- 实现文件与入口：`cs336_systems/fsdp.py` 中的 `FullyShardedDataParallel`（包装底层 `nn.Module`）。
+  - **分片策略**：对 `cs336_basics` 的 `Linear` / `Embedding` 沿 `dim=0` 按 `world_size` 切分本地 shard；带 `weight` 的小层（主要是 RMSNorm 等归一化）保持复制、不分片。
+  - **前向**：各分片层 `forward_pre_hook` 上 all-gather 成完整权重；该层 `forward` 结束后释放回本地 shard；并在第 \(i\) 层结束后预取第 \(i+2\) 层权重（当前实现为同步 all-gather，满足「提前两层」时序；异步重叠留待 accounting / 后续优化）。
+  - **反向**：分片层 `full_backward_pre_hook` 再次 all-gather；`finish_gradient_synchronization` 对分片参数做梯度 reduce-scatter（SUM 后除以 `world_size`）并缩回 shard，对复制参数做 all-reduce 平均。
+  - **混精**：`compute_dtype` 非空时，通信/计算前将权重 cast 到该 dtype，master 权重与优化器更新保持 FP32；grad 累加后写回 FP32，避免 Half 权重上挂 Float 梯度。
+  - **其它接口**：`forward` 将 `*args/**kwargs` 转给底层模块；`gather_full_params` 对分片参数 all-gather 拼回完整张量，复制参数直接 clone。优化器侧与普通 `torch.optim` / Assignment 1 AdamW 兼容（参数已是各 rank 本地 shard）。
+- Adapter（`tests/adapters.py`）：
+  - `get_fsdp(module, compute_dtype=...)` → `FullyShardedDataParallel(...)`
+  - `fsdp_on_after_backward` → `fsdp_model.finish_gradient_synchronization()`
+  - `fsdp_gather_full_params` → `fsdp_model.gather_full_params()`
+- 测试次数、结果与日志：本机（gloo）与 UCloud A800 上均跑过 `pytest tests/test_fsdp.py -q`，**4 passed**（`correctness` / `gradient_sync` × fp32/fp16）。未单独保存 pytest 日志文件。讲义建议连跑约 5 次排查竞争；提交前建议再连跑确认。子进程中可能打印 `UserWarning`（full backward hook / inputs 不需梯度），未导致失败。
 
 ### fsdp_accounting — FSDP Accounting（5 分）
 
@@ -1210,7 +1252,7 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-【待填写推导、对比基线和结果】
+第 6 章仅分片优化器状态，参数与梯度仍每卡一份：\(M_{\mathrm{OS}}=P+G+2P/N\)。FSDP 再分片参数与梯度（优化器状态随 shard 参数按比例减小），忽略 all-gather 缓冲与 Norm 等小复制层时，\(M_{\mathrm{FSDP}}=(P+G+2P)/N\)。取 \(G\approx P\)、\(N=2\)，则 \(M_{\mathrm{OS}}\approx 3P\)、\(M_{\mathrm{FSDP}}\approx 2P\)，相对 OS-sharding 约再省一套 \(P\)。第 6 章 xl 实测 \(P\approx 12.8\,\mathrm{GiB}\)，故预期约再省 **12–13 GiB/GPU**。（同配置步内累计峰见 `results/a800_fsdp_accounting.txt`：12.86 / 52.68 / 52.68 GiB，含 AG/激活高水位，不宜直接当作稳态 \(M_{\mathrm{FSDP}}\) 去减 44.9。）
 
 #### (b) 权重通信能否及时完成
 
@@ -1220,9 +1262,19 @@ AutoDL RTX PRO 6000。配置按 **Table 1 的 xl**（32 层 / **32 头**），�
 
 **答案**
 
-- 测量配置及时间：【待填写】
-- Nsight 截图与图注：【待插入】
-- 分析：【待填写】
+- 测量配置及时间：UCloud 2×A800-SXM4-80GB；xl（\(d=2560\)，32 层，32 头，\(d_{\mathrm{ff}}=10240\)），vocab 10000，batch 4，context 512；`cs336_systems/benchmark_fsdp.py`（NCCL，`mp.spawn`，`localhost:29502`）。`nsys profile --trace=cuda,nvtx -o fsdp_xl_ag`；报告 `nsys_reports/fsdp_xl_ag.nsys-rep`（本机 GUI 全貌已存为 `mem_snapshots/fsdp_ag_overview.png`）。脚本 NVTX：`fsdp_forward` / `fsdp_backward`。同一次运行峰值见上（约 12.9 / 52.7 / 52.7 GiB）。
+- **可读计时（非 `nsys stats` CLI）**：报告里紧挨 NVTX 名的时间戳与 0–38 s 标尺一致——`fsdp_forward` 约从 **30.2 s** 起，`fsdp_backward` 约从 **32.4 s** 起，故整段前向 NVTX 约 **2.2 s**；backward NVTX 约到 37.1 s，约 **4.7 s**。NCCL 行上在 forward 开始前可见一小段（约 30.0 s），随后才是大块 CUDA kernel。本 profile **拆不出逐层 all-gather 毫秒数**。
+- Nsight 截图与图注：
+
+![FSDP all-gather overview](mem_snapshots/fsdp_ag_overview.png)
+
+图注：`nsys-ui --screenshot` 全貌（0–38 s）。双进程；NVTX 可见 `fsdp_forward` / `fsdp_backward`。CUDA HW 先绿后蓝，NCCL 短块在 forward 标尺附近。
+
+![FSDP all-gather timeline](mem_snapshots/fsdp_ag_timeline.png)
+
+图注：同一报告裁到约 20–38 s。`fsdp_forward`（约 2.2 s）内，NCCL 与随后大块 Kernel 仍是先后衔接，不是计算把通信盖住。
+
+- 分析：prefetch 为同步 `all_gather`，前向 NVTX 约 2.2 s 是「通信 + 计算」捆在一起的墙钟，不是纯 all-gather。时间线上通信块出现在大块 matmul 之前，故**不能**说权重通信已及时被前向算力掩盖；现证据只支持「偏串行、通信仍在关键路径」，不能量化「每层是否赶上」。异步 gather 才更可能把 all-gather 藏进邻层计算。
 
 ## 8. Analyzing Parallelism Strategies
 
@@ -1525,13 +1577,13 @@ dX=\operatorname{all\text{-}reduce}_{\mathrm{sum}}\bigl(\{G^{(i)}\}_{i=0}^{N_{\m
 
 **答案**
 
-- 是否完成指定硬件实验：【待填写】
-- 实际设备与正式配置的差异：【待填写】
-- 最佳完整训练步骤耗时：【待填写，注明 ms 或 s】
-- 从空缓存开始的总运行时间：【待填写】
-- 正确性测试结果：【待填写】
-- 对应代码版本与原始日志：【待填写】
-- 排行榜提交记录（如有）：【待填写】
+- 是否完成指定硬件实验：**否**。讲义要求 2×B200；本次无可用 B200 机时，未跑正式 leaderboard 配置。
+- 实际设备与正式配置的差异：开发与第 5–7 章多用 AutoDL 单卡 6000 / UCloud 2×A800；**未**在 2×B200 上测量 batch 2、context 32768 的完整训练步。
+- 最佳完整训练步骤耗时：不适用（未测）。
+- 从空缓存开始的总运行时间：不适用（未测）。
+- 正确性测试结果：未跑 leaderboard 正确性套件。
+- 对应代码版本与原始日志：无。
+- 排行榜提交记录（如有）：无。
 
 ## 附录：原模板的 PDF 与模板逐题核对记录（2026-09-16）
 
@@ -1583,19 +1635,25 @@ dX=\operatorname{all\text{-}reduce}_{\mathrm{sum}}\bigl(\{G^{(i)}\}_{i=0}^{N_{\m
 
 | 题号 | 实现文件 | 原始结果 / 日志 | 图片 / Profile | 状态 |
 | --- | --- | --- | --- | --- |
-| benchmarking_script | `cs336_systems/benchmark.py` | 计时已写入第 2 章；本地缺原始终端日志 | — | (a)(b)(c) 已记录 |
+| benchmarking_script | `cs336_systems/benchmark_lm.py` | 计时已写入第 2 章；本地缺原始终端日志 | — | (a)(b)(c) 已记录 |
 | nsys_profile | 同上，`--nvtx`；inference 另采 `--mode forward --inference` | `nsys_stats/`（含 `*_nvtx_gpu_proj_sum.csv`、`*_inference_all_cuda_gpu_kern_sum.csv`、`*_nvtxname_cuda_gpu_kern_sum_nvtx-name.csv`）、`notes/nsys_profile_tables.md` | `nsys_reports/{medium,large}_{len}.nsys-rep` 与 `*_inference.nsys-rep` | (a)–(e) GPU 口径已写 |
-| mixed_precision_accumulation | `mixed_precision_accumulation.py` | 四行 `print` 已贴入答案 | — | 已用 PyTorch 确认 |
-| benchmarking_mixed_precision | `benchmark.py --precision bf16` | small–xl stages 已写入 (c) | — | (a) 未实测 ToyModel；10B BF16 OOM |
-| memory_profiling | `--memory-snapshot`；(f) nsys `--cuda-memory-usage` | `mem_snapshots/*.pickle`（6 份）；nocache nsys | `*_timeline.png`、`*_largest_alloc.png`、`nsight_l0_*.png` | (e) 无 stack；(f) 需核对本脚本 |
-| gradient_checkpointing | `benchmark.py --checkpoint-size` | `results/checkpoint_xl_b4_ctx2048_fp32_fwd_bwd_k{1,2,4}.{json,log}` | — | k=1/2/4 有峰值；k=0 为历史 train OOM |
-| pytorch_attention | `cs336_systems/pytorch_attention.py` | `results/pytorch_attention_float32.csv`（20 行） | — | 本卡 20 组 OK |
+| mixed_precision_accumulation | `cs336_systems/mixed_precision_accumulation.py` | 四行 `print` 已贴入答案 | — | 已用 PyTorch 确认 |
+| benchmarking_mixed_precision | `benchmark_lm.py --precision bf16` | small–xl stages 已写入 (c) | — | (a) 未实测 ToyModel；10B BF16 OOM |
+| memory_profiling | `--memory-snapshot`；(f) nsys `--cuda-memory-usage` | `mem_snapshots/raw/*.pickle`（6 份）；nocache nsys | `*_timeline.png`、`*_largest_alloc.png`、`nsight_l0_*.png` | (e) 无 stack；(f) 需核对本脚本 |
+| gradient_checkpointing | `benchmark_lm.py --checkpoint-size` | `results/checkpoint_xl_b4_ctx2048_fp32_fwd_bwd_k{1,2,4}.{json,log}` | — | k=1/2/4 有峰值；k=0 为历史 train OOM |
+| pytorch_attention | `cs336_systems/benchmark_pytorch_attention.py` | `results/pytorch_attention_float32.csv`（20 行） | — | 本卡 20 组 OK |
 | torch_compile (a) | 同上，`--compile` | `results/compiled_attention_float32.csv`（20 行） | — | 20 组 OK |
-| torch_compile (b) | `benchmark.py --compile` | `results/torch_compile_{small,medium}_*_compiled.json`（6 份，已同步） | — | 表中均值与 json 一致 |
+| torch_compile (b) | `benchmark_lm.py --compile` | `results/torch_compile_{small,medium}_*_compiled.json`（6 份，已同步） | — | 表中均值与 json 一致 |
 | flash_forward / flash_backward | `cs336_systems/flash_attention.py`；`tests/adapters.py` | AutoDL pytest 6 passed / 15.27s | — | Triton adapter 指向 Full |
 | 4.2.3 Triton backward | `cs336_systems/flash_attention_triton_backward.py` | `check_flash_backward` 8 PASS | — | 可选；未重测 160 组 |
 | flash_benchmarking | `cs336_systems/benchmark_flash_attention.py` | `results/flash_benchmarking.csv`（160 行） | — | 156 OK；Flash 列为编译反向；PyTorch FP32 L=65536 四组反向 OOM |
-| 第 5–9 章 | adapter 仍为 `NotImplementedError` | — | — | 未开始 |
+| distributed_communication_single_node | `cs336_systems/benchmark_distributed_communication.py` | `results/a800_all_reduce_results.csv`；`notes/a800_4gpu.md` | — | NCCL 2/4 进程；6 未测 |
+| naive / flat / overlap DDP | `cs336_systems/ddp.py`；`benchmark_ddp.py`；`tests/adapters.py` | `notes/a800_4gpu.md` | `mem_snapshots/ddp_*_{overview,timeline}.png`；`nsys_reports/ddp_*.nsys-rep` | 2×A800 xl 计时 + nsys |
+| optimizer_state_sharding | `cs336_systems/optimizer_state_sharding.py`；`tests/adapters.py` | 本机 pytest 多次 2 passed | — | Gloo 正确性 |
+| optimizer_state_sharding_accounting | `cs336_systems/benchmark_optimizer_sharding.py` | `results/a800_optimizer_sharding_accounting.txt`；`notes/a800_4gpu.md` | — | 2×A800 (a)(b)；(c) 对照 [5] |
+| fsdp | `cs336_systems/fsdp.py`；`tests/adapters.py` | 本机 + A800 `pytest tests/test_fsdp.py` 4 passed | — | gloo 正确性；prefetch 为同步 \(i{+}2\) |
+| fsdp_accounting | `cs336_systems/benchmark_fsdp.py` | `results/a800_fsdp_accounting.txt` | `mem_snapshots/fsdp_ag_*.png`；`nsys_reports/fsdp_xl_ag.nsys-rep` | 2×A800 (a) 公式 + (b) nsys |
+| leaderboard | — | — | — | **未做**（无 2×B200） |
 
 ## 参考文献
 
@@ -1605,16 +1663,14 @@ dX=\operatorname{all\text{-}reduce}_{\mathrm{sum}}\bigl(\{G^{(i)}\}_{i=0}^{N_{\m
 4. [PyTorch 2.11 Automatic Mixed Precision](https://docs.pytorch.org/docs/2.11/amp.html#cuda-op-specific-behavior)：ToyModel 的 CUDA autocast dtype 推导。
 
 
-## 后续工作清单（2026-09-17）
+## 后续工作清单（2026-09-25 更新）
 
-按分值与依赖排序，不是按章节号。
+按交卷优先级：
 
-1. **身份（无 GPU）**：补姓名学号、commit（当前工作区相对 `cf30ffe` 仍有未提交改动，提交前再填 hash）。compile JSON、flash csv、checkpoint 的 json/log 已在本地 `results/`。pytest 没有单独日志文件，以 writeup 中转述的 6 passed / 15.27s 为准。
-2. **第 8 章纸面计算**：`alternate_ring_all_reduce` 至 `fsdp_tp_calcs` 已写入；提交前再通读一遍公式。
-3. **Nsight 口径**：(a)–(e) 已按 GPU csv 写入。(b) 前向+反向排除 `optimizer/`，不用 `:backward` 投影；(c) 与 (d) 共用 inference kernel 表。旧 `*_fwd_*` 窗口不再作为结论。
-4. **显存证据**：若要满足 (e) 的 stack trace，需在模型上 GPU 之前开始 memory history，现有 Ghost 图不够；(f) 核对该 nsys 所用脚本是否含 `zero_grad(set_to_none=True)`。
-5. **分布式实现**：`tests/adapters.py` 中 DDP / sharded optimizer / FSDP 可先在 CPU（gloo）上写；6 卡 all-reduce 与 2 卡 xl 计时另排机器。
-6. **flash_benchmarking**：160 组表已写入第 4 章；不必再扫。
-7. **提交物**：`writeup.pdf`、`code.zip`；Leaderboard 最后。
+1. **身份**：补姓名、学号；打包前填写最终 commit hash。
+2. **提交物**：导出 `writeup.pdf`、打包 `code.zip`（确认含 `cs336_systems/`、`tests/adapters.py`、关键 `results/` / `mem_snapshots/` / `nsys_reports/` 引用文件）。
+3. **可选加固**：`pytest tests/test_fsdp.py` 连跑数次；若需更清晰的 FSDP (b) 图，在 Nsight 中放大 `fsdp_forward` 再截替换 `mem_snapshots/fsdp_ag_timeline.png`。
+4. **已知未做 / 弱证据（可保持标注）**：Leaderboard（无 2×B200）；all-reduce 6 进程；memory_profiling (e) stack；(f) 与脚本 `zero_grad` 口径核对。
+5. **第 8 章**：纸面公式已写入；导出 PDF 前通读一遍符号即可。
 
-填写进度约 44/58 个单元有正文；第 5–7 章与 Leaderboard 仍空。
+填写进度：第 1–8 章作答单元均有正文；第 9 章 Leaderboard 标明未做。

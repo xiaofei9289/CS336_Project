@@ -1,0 +1,66 @@
+{
+  "config": {
+    "mode": "train",
+    "timing": "total",
+    "model_size": "medium",
+    "batch_size": 4,
+    "context_length": 512,
+    "sequence_length": 512,
+    "vocab_size": 10000,
+    "rope_theta": 10000.0,
+    "warmup_steps": 5,
+    "measurement_steps": 10,
+    "lr": 0.001,
+    "seed": 42,
+    "inference": false,
+    "precision": "fp32",
+    "memory_snapshot": null,
+    "compile": false,
+    "results_json": "results/torch_compile_medium_b4_ctx512_fp32_train_total_eager_rerun.json",
+    "optimizer_class": null,
+    "nvtx": false,
+    "checkpoint_size": 0,
+    "d_model": 1024,
+    "d_ff": 4096,
+    "num_layers": 24,
+    "num_heads": 16
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "torch_version": "2.11.0+cu128",
+  "cuda_version": "12.8",
+  "execution_mode": "eager",
+  "compile_scope": null,
+  "compile_settings": null,
+  "tf32_matmul": false,
+  "tf32_cudnn": true,
+  "zero_grad_in_timing": false,
+  "measurement_name": "forward + loss + backward + optimizer (excluding zero_grad)",
+  "parameter_count": 423183360,
+  "optimizer": "torch.optim.adamw.AdamW",
+  "baseline_allocated_mib": 6477.421875,
+  "peak_allocated_mib": 14048.7392578125,
+  "peak_reserved_mib": 14518.0,
+  "timings_ms": {
+    "total": [
+      166.82493966072798,
+      166.66610352694988,
+      166.78485553711653,
+      166.443083435297,
+      166.9089589267969,
+      166.6114218533039,
+      166.05532448738813,
+      165.79032130539417,
+      166.33008979260921,
+      165.2528401464224
+    ]
+  },
+  "timing_summary_ms": {
+    "total": {
+      "mean": 166.3667938672006,
+      "std": 0.5005436216989476,
+      "min": 165.2528401464224,
+      "max": 166.9089589267969
+    }
+  },
+  "memory_scope": "Total CUDA allocator memory during measurement, including backward when enabled; not activation-only"
+}

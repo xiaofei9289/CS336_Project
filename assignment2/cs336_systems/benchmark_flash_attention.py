@@ -1,23 +1,21 @@
-"""CS336 flash_benchmarking: causal attention on one GPU, batch size 1.
+"""Benchmark causal attention: eager PyTorch vs partial Triton FlashAttention.
 
-Run from the assignment repository root:
-    uv run python -m cs336_systems.benchmark_flash_attention
+For every dtype, embedding size, and sequence length:
+    1. Create random Q, K, V and an output gradient.
+    2. Time the forward pass.
+    3. Time the backward pass on one saved graph.
+    4. Time a fresh forward followed by its backward.
+    5. Write one CSV row.
 
-Default sweep: L=128..65536 (powers of two), d=16/32/64/128,
-BF16 and FP32, PyTorch baseline and the assignment FlashAttentionTriton.
-The handout specifies a B200; actual GPU and software versions are recorded.
+Sequence lengths are powers of two from 128 through 65536.
+Embedding sizes are 16, 32, 64, and 128. Precisions are BF16 and FP32.
+Batch size is 1, and attention is causal. There is no optimizer.
 
-Forward: training-mode attention with autograd tracking enabled.
-Backward: reuse ONE output graph with retain_graph=True to time backward alone.
-Forward+backward: build a NEW graph every call; retain_graph=False.
-Both backward callbacks reset input gradients on every invocation.
-No optimizer. All random inputs and the baseline mask are made before timing.
-do_bench returns mean CUDA-event milliseconds, not synchronized wall time.
---warmup-ms and --rep-ms are time budgets, NOT iteration counts.
+Each (implementation, dtype, length, d) runs in its own process so one
+out-of-memory failure cannot disturb the next configuration. The process
+you launch only queues those runs and writes the CSV.
 
-Each (implementation, dtype, L, d) runs in a fresh sequential subprocess.
-Successful metrics survive a later OOM; unmeasured metrics remain blank.
-CSV has one row per implementation (160 rows for the complete default sweep).
+    python -m cs336_systems.benchmark_flash_attention
 """
 
 import argparse
@@ -96,7 +94,8 @@ def new_row(args, implementation, dtype, length, dim):
     }
 
 
-def measure_configuration(torch, do_bench, args, row):
+def prepare_config(torch, row):
+    """Import the selected attention and allocate this configuration's inputs."""
     row["failure_phase"] = "import_attention"
     if row["implementation"] == "pytorch":
         from cs336_basics.model import scaled_dot_product_attention
@@ -111,11 +110,12 @@ def measure_configuration(torch, do_bench, args, row):
         torch.randn(shape, device="cuda", dtype=dtype, requires_grad=True)
         for _ in range(3)
     ]
+    # backward() needs an explicit gradient because the attention output is not a scalar.
     dO = torch.randn(shape, device="cuda", dtype=dtype)
 
     if row["implementation"] == "pytorch":
         row["failure_phase"] = "mask_allocation"
-        # Baseline uses the existing assignment implementation, NOT SDPA/Flash.
+        # The assignment attention takes an explicit mask. Flash builds causality inside its kernel.
         indices = torch.arange(length, device="cuda")
         causal_mask = indices[:, None] >= indices[None, :]
         del indices
@@ -123,56 +123,30 @@ def measure_configuration(torch, do_bench, args, row):
         def forward():
             return scaled_dot_product_attention(q, k, v, mask=causal_mask)
     else:
-        # Flash builds its causal mask inside each Triton tile.
         def forward():
             return FlashAttentionTriton.apply(q, k, v, True)
 
-    def clear_gradients():
-        q.grad = k.grad = v.grad = None
-
-    def record_metric(name, fn):
-        row["failure_phase"] = f"{name}_warmup"
-        row[f"{name}_status"] = "RUNNING"
-        for _ in range(args.warmup_steps):
-            fn()
-            torch.cuda.synchronize()
-        # First Triton/torch.compile executions have finished before do_bench.
-        row["failure_phase"] = f"{name}_measurement"
-        row[f"{name}_ms"] = float(do_bench(
-            fn, warmup=args.warmup_ms, rep=args.rep_ms, return_mode="mean"
-        ))
-        row[f"{name}_status"] = "OK"
-
-    torch.cuda.synchronize()
-    record_metric("forward", forward)
-    clear_gradients()
-    torch.cuda.synchronize()
-
-    row["failure_phase"] = "backward_prepare"
-    row["backward_status"] = "RUNNING"
-    out = forward()
-    torch.cuda.synchronize()
-
-    def backward():
-        clear_gradients()
-        out.backward(dO, retain_graph=True)
-
-    record_metric("backward", backward)
-    # Release the retained graph BEFORE benchmarking fresh forward+backward.
-    del backward, out
-    clear_gradients()
-    torch.cuda.synchronize()
-
-    def forward_backward():
-        clear_gradients()
-        output = forward()
-        output.backward(dO)
-
-    # This is measured directly, not computed by adding two mean latencies.
-    record_metric("forward_backward", forward_backward)
+    return q, k, v, dO, forward
 
 
-def run_worker(args):
+def time_metric(torch, do_bench, args, row, name, fn):
+    """Warm up fn, then record its mean do_bench latency in milliseconds."""
+    row["failure_phase"] = f"{name}_warmup"
+    row[f"{name}_status"] = "RUNNING"
+    for _ in range(args.warmup_steps):
+        fn()
+        torch.cuda.synchronize()
+    # First Triton or torch.compile executions have finished before do_bench.
+    # The assignment asks for triton.testing.do_bench, which times CUDA events.
+    row["failure_phase"] = f"{name}_measurement"
+    row[f"{name}_ms"] = float(do_bench(
+        fn, warmup=args.warmup_ms, rep=args.rep_ms, return_mode="mean"
+    ))
+    row[f"{name}_status"] = "OK"
+
+
+def measure_config(args):
+    """Child process: time one configuration and write one JSON row."""
     row = new_row(args, args.implementations[0], args.dtypes[0], args.seq_lengths[0], args.dims[0])
     torch = None
     try:
@@ -193,7 +167,40 @@ def run_worker(args):
             torch_version=str(torch.__version__), cuda_version=torch.version.cuda,
             triton_version=str(triton.__version__),
         )
-        measure_configuration(torch, do_bench, args, row)
+        q, k, v, dO, forward = prepare_config(torch, row)
+
+        def clear_gradients():
+            # Drop saved gradients so repeated backwards do not accumulate.
+            q.grad = k.grad = v.grad = None
+
+        torch.cuda.synchronize()
+        time_metric(torch, do_bench, args, row, "forward", forward)
+        clear_gradients()
+        torch.cuda.synchronize()
+
+        row["failure_phase"] = "backward_prepare"
+        row["backward_status"] = "RUNNING"
+        out = forward()
+        torch.cuda.synchronize()
+
+        def backward():
+            clear_gradients()
+            # Keep this graph so backward can be repeated without another forward.
+            out.backward(dO, retain_graph=True)
+
+        time_metric(torch, do_bench, args, row, "backward", backward)
+        # Drop the saved graph before timing a fresh forward together with its backward.
+        del backward, out
+        clear_gradients()
+        torch.cuda.synchronize()
+
+        def forward_backward():
+            clear_gradients()
+            output = forward()
+            output.backward(dO)
+
+        # Measured directly. Do not add the forward mean to the backward mean.
+        time_metric(torch, do_bench, args, row, "forward_backward", forward_backward)
         row.update(status="OK", failure_phase="")
     except Exception as exc:
         oom = torch is not None and isinstance(exc, torch.cuda.OutOfMemoryError)
@@ -208,14 +215,78 @@ def run_worker(args):
     return int(row["status"] == "ERROR")
 
 
-def run_parent(args):
+def launch_one(args, script, env, result_path, implementation, dtype, length, dim):
+    """Start one child for a single configuration and wait until it exits."""
+    command = [
+        sys.executable, script, "--worker", "--result-json", str(result_path),
+        "--implementations", implementation, "--dtypes", dtype,
+        "--seq-lengths", str(length), "--dims", str(dim),
+        "--warmup-steps", str(args.warmup_steps), "--warmup-ms", str(args.warmup_ms),
+        "--rep-ms", str(args.rep_ms), "--seed", str(args.seed),
+    ]
+    return subprocess.run(command, env=env, capture_output=True, text=True)
+
+
+def read_one(child, result_path, row):
+    """Turn one finished child into a CSV row."""
+    if result_path.exists():
+        row = json.loads(result_path.read_text(encoding="utf-8"))
+    else:
+        # A killed process may leave no JSON. That is a crash, not an OOM record.
+        row.update(
+            status="ERROR", failure_phase="child_process",
+            error=child.stderr[-8000:] or "Child exited without a result",
+        )
+    row["child_returncode"] = child.returncode
+    if child.returncode != 0:
+        row["status"] = "ERROR"
+    return row
+
+
+def prepare_run(args):
+    """Create the result directory and the environment shared by every child."""
     if args.output.exists():
         raise SystemExit(f"Output already exists: {args.output}; choose a new --output")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
+    # Preserve repository imports when launching this script by absolute path.
     env["PYTHONPATH"] = os.pathsep.join(
         [str(Path.cwd()), *[p for p in sys.path if p], env.get("PYTHONPATH", "")]
     )
+    script = str(Path(__file__).resolve())
+    return script, env
+
+
+def record_config(args, file, writer, script, env, result_path, implementation, dtype, length, dim):
+    """Measure one configuration and append its row. Return 'ok', 'error', or 'stop'."""
+    print(f"Running {implementation}: {dtype}, L={length}, d={dim}", flush=True)
+    row = new_row(args, implementation, dtype, length, dim)
+    child = launch_one(args, script, env, result_path, implementation, dtype, length, dim)
+    row = read_one(child, result_path, row)
+    writer.writerow(row)
+    file.flush()
+    print(
+        f"  {row['status']} | fwd={row.get('forward_ms', 'NA')} ms"
+        f" | bwd={row.get('backward_ms', 'NA')} ms"
+        f" | fwd+bwd={row.get('forward_backward_ms', 'NA')} ms"
+        f" | phase={row['failure_phase']}", flush=True,
+    )
+    if row["status"] != "ERROR":
+        return "ok"
+    print(row.get("error", "Child failed"), file=sys.stderr)
+    # Missing dependencies or a missing attention import affect every configuration.
+    if row["failure_phase"] in {"setup", "import_attention"}:
+        return "stop"
+    return "error"
+
+
+def run_all(args):
+    """Queue every configuration in its own process and write the CSV.
+
+    A separate process is what releases that configuration's GPU memory before
+    the next one starts. This process does not call CUDA.
+    """
+    script, env = prepare_run(args)
     failed = False
     with args.output.open("x", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=FIELDS)
@@ -226,44 +297,25 @@ def run_parent(args):
                 for dim in args.dims:
                     for length in args.seq_lengths:
                         for implementation in args.implementations:
-                            row = new_row(args, implementation, dtype, length, dim)
                             result_path = Path(temp) / f"{implementation}_{dtype}_{length}_{dim}.json"
-                            command = [
-                                sys.executable, str(Path(__file__).resolve()), "--worker",
-                                "--result-json", str(result_path), "--implementations", implementation,
-                                "--dtypes", dtype, "--seq-lengths", str(length), "--dims", str(dim),
-                                "--warmup-steps", str(args.warmup_steps), "--warmup-ms", str(args.warmup_ms),
-                                "--rep-ms", str(args.rep_ms), "--seed", str(args.seed),
-                            ]
-                            print(f"Running {implementation}: {dtype}, L={length}, d={dim}", flush=True)
-                            child = subprocess.run(command, env=env, capture_output=True, text=True)
-                            if result_path.exists():
-                                row = json.loads(result_path.read_text(encoding="utf-8"))
-                            else:
-                                row.update(
-                                    status="ERROR", failure_phase="child_process",
-                                    error=child.stderr[-8000:] or "Child exited without a result",
-                                )
-                            row["child_returncode"] = child.returncode
-                            if child.returncode != 0:
-                                row["status"] = "ERROR"
-                            writer.writerow(row)
-                            file.flush()
-                            print(
-                                f"  {row['status']} | fwd={row.get('forward_ms', 'NA')} ms"
-                                f" | bwd={row.get('backward_ms', 'NA')} ms"
-                                f" | fwd+bwd={row.get('forward_backward_ms', 'NA')} ms"
-                                f" | phase={row['failure_phase']}", flush=True,
+                            outcome = record_config(
+                                args, file, writer, script, env, result_path,
+                                implementation, dtype, length, dim,
                             )
-                            if row["status"] == "ERROR":
+                            if outcome == "stop":
+                                return 1
+                            if outcome == "error":
                                 failed = True
-                                print(row.get("error", "Child failed"), file=sys.stderr)
-                                if row["failure_phase"] in {"setup", "import_attention"}:
-                                    return 1
     print(f"Saved: {args.output}")
     return int(failed)
 
 
+def main():
+    args = parse_args()
+    if args.worker:
+        sys.exit(measure_config(args))
+    sys.exit(run_all(args))
+
+
 if __name__ == "__main__":
-    arguments = parse_args()
-    sys.exit(run_worker(arguments) if arguments.worker else run_parent(arguments))
+    main()

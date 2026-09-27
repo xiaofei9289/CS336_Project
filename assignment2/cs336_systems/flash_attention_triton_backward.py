@@ -26,10 +26,7 @@ from torch.autograd.function import once_differentiable
 import triton
 import triton.language as tl
 
-from cs336_systems.flash_attention import (
-    FlashAttentionTriton,
-    validate_inputs,
-)
+from cs336_systems.flash_attention import FlashAttentionTriton
 
 
 # ============================================================
@@ -321,8 +318,6 @@ def flash_backward_triton(
     query_tile_size=32,
     key_tile_size=32,
 ):
-    validate_inputs(Q, K, V)
-
     if not Q.is_cuda:
         raise ValueError("Triton backward 需要 CUDA 张量")
     if Q.dtype not in (torch.float16, torch.bfloat16, torch.float32):

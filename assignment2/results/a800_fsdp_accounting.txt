@@ -1,0 +1,11 @@
+# FSDP accounting — UCloud 2xA800-SXM4-80GB (2026-09-25)
+# Script: cs336_systems/benchmark_fsdp.py
+# Config: xl (d=2560, layers=32, heads=32, d_ff=10240), vocab=10000, B=4, L=512, NCCL, world_size=2
+# Metric: rank0 torch.cuda.max_memory_allocated (GiB), single reset at start (Ch.6 style)
+
+after_init:   12.86 GiB
+before_step:  52.68 GiB
+after_step:   52.68 GiB
+
+# nsys: /root/fsdp_xl_ag.nsys-rep -> nsys_reports/fsdp_xl_ag.nsys-rep
+# Note: peaks include temporary all-gather / activations; after_init high-water includes full-model load before shard.

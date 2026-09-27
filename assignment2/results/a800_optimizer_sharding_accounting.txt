@@ -1,0 +1,15 @@
+# A800 optimizer-state-sharding accounting (2026-09-25)
+# Source: remote torch/mp runs printed to stdout; no remote result file existed.
+# Machine: 2x A800-SXM4-80GB; xl B=4 L=512; script cs336_systems/benchmark_optimizer_sharding.py
+
+## (a) Peak memory — rank0 max_memory_allocated (GiB), --mode memory
+
+setting,after_init_GiB,before_step_GiB,after_step_GiB
+adamw,12.817,40.155,63.677
+sharded,12.817,40.155,44.926
+
+## (b) Step time — warmup 5, measure 10, --mode timing
+
+setting,ms_per_step
+adamw,2714.254
+sharded,3353.776

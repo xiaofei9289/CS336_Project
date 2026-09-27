@@ -1,0 +1,43 @@
+TinyStories SiLU FFN ablation — DONE 2026-09-07 01:47 on desktop-pc
+
+Machine: Windows desktop RTX 3060 Ti 8GB
+Script: D:\desktop\train_lm.py --use-silu-ffn --d-ff 2048
+First segment interrupted at step 9010; resumed from checkpoint_007500.pt.
+
+Same model / data / schedule as bs_32 EXCEPT ungated SiLU FFN and d_ff=2048
+(pre-norm, RMSNorm, ln_final, RoPE, causal mask kept):
+  vocab 10000, context 256, d_model 512, 4 layers, 16 heads
+  batch 32, steps 10000, warmup 500, cosine 10000, max_lr 1e-3, min_lr 1e-4, seed 42, device cuda
+
+parameters: 22,827,520  (SwiGLU bs_32: 22,696,448; +131,072, ~0.58%)
+
+local official log: runs/ablate_silu/training_log.csv
+  = interrupted rows with iteration<=7500 + resume 7510-10000
+  wall-clock on resume rows offset by elapsed@7500 (1449.75 s)
+provenance: training_log_interrupted.csv (stopped at 9010), training_log_resume.csv (7510-10000)
+Do not use interrupted rows after 7500 (that tail was discarded).
+
+checkpoints on desktop only:
+  D:\desktop\runs\ablate_silu\checkpoint_002500/5000/7500/10000/final.pt
+
+CSV is one complete 10k series (header + 1001 log rows).
+wall time (stitched): 1935.18 s (~32.3 min)
+tokens/step = 32 * 256 = 8192
+tokens in 10000 steps = 81,920,000
+
+step     train    val
+    1    9.236    9.237
+  500    2.680    2.725
+ 2500    1.974    1.947
+ 5000    1.689    1.759
+ 7500    1.596    1.606
+ 8500    1.590    1.581
+10000    1.547    1.579
+
+No NaN/Inf. Min recorded val 1.579 at step 10000.
+Same-schedule SwiGLU bs_32: val@10k 1.574; min val 1.551 at step 9000.
+
+Plots vs bs_32: runs/ablate_silu/curve_step.png and curve_step_wallclock.png
+Linear y is the writeup figure.
+
+Do not confuse with runs/tinystories (40k, warmup 2000).

@@ -1,0 +1,84 @@
+OWT LM (main_experiment) — recovered 2026-09-07 from local logs + the 2026-09-04/05 AutoDL launch record.
+
+The AutoDL instance is currently powered off (SSH to the old Beijing jump host closes immediately). Do not treat this file as a live nvidia-smi dump from today.
+
+---------- host ----------
+Provider: AutoDL / Seetacloud
+Jump host at launch: connect.bjb1.seetacloud.com port 31970
+Working directory: /root/autodl-tmp/assignment01
+Python: /root/miniconda3/bin/python
+GPU observed while this run was in progress (~00:47, step ~4100):
+  NVIDIA GeForce RTX 5090
+  sampled nvidia-smi: 8477 / 32607 MiB, utilization 96%
+  process: train_lm.py PID 8451
+CPU/RAM on that rental (from the same AutoDL session, not re-measured today): ~208 cores; data disk ~50 GB.
+This is NOT the earlier west AutoDL box used for optional BPE (that one was RTX 4080 SUPER / 128 cores / ~503 GB).
+
+---------- command (launch argv) ----------
+cd /root/autodl-tmp/assignment01
+export PYTHONPATH=/root/autodl-tmp/assignment01
+
+nohup /root/miniconda3/bin/python -u train_lm.py \
+  --train-data data/owt/train.bin.uploaded \
+  --valid-data data/owt/valid.bin \
+  --vocab-size 32000 \
+  --context-length 256 \
+  --d-model 512 \
+  --num-layers 4 \
+  --num-heads 16 \
+  --d-ff 1344 \
+  --rope-theta 10000 \
+  --batch-size 32 \
+  --max-iterations 40000 \
+  --max-lr 1e-3 \
+  --min-lr 1e-4 \
+  --warmup-iters 2000 \
+  --cosine-cycle-iters 40000 \
+  --log-interval 10 \
+  --eval-interval 500 \
+  --eval-iters 20 \
+  --checkpoint-interval 10000 \
+  --output-dir runs/owt \
+  --device cuda \
+  --seed 42 \
+  > /root/autodl-tmp/logs/owt_lm.log 2>&1 &
+
+---------- data ----------
+train: data/owt/train.bin.uploaded
+  desktop-encoded OWT train.bin uploaded to AutoDL
+  5,454,240,904 bytes; 2,727,120,452 uint16 tokens
+valid: data/owt/valid.bin
+  66,401,098 tokens (matches desktop encode notes)
+A separate AutoDL encode of owt_train.txt was still running during training; that in-progress train.bin was NOT used for this LM.
+
+---------- log header (local copy of owt_lm.log) ----------
+device=cuda
+parameters=45,224,448
+train_tokens=2,727,120,452; valid_tokens=66,401,098
+overfit_one_batch=False
+
+Local copies:
+  runs/owt/owt_lm.log
+  runs/owt/training_log.csv
+Remote at launch:
+  /root/autodl-tmp/logs/owt_lm.log
+  /root/autodl-tmp/assignment01/runs/owt/training_log.csv
+  /root/autodl-tmp/assignment01/runs/owt/checkpoint_final.pt
+
+---------- cross-checks ----------
+CSV step 4000: train 4.868, val 4.941, elapsed 261 s
+  matches the live check at step 4000 (val 4.941) on the 5090.
+CSV LR at completed=10 is 4.5e-6 = 9/2000 * 1e-3, so warmup 2000 / max_lr 1e-3.
+CSV final LR 1e-4 at step 40000 matches min_lr and cosine_cycle_iters=40000.
+Eval values appear at step 1 then every 500 steps.
+
+---------- derived (from argv, not from CSV columns) ----------
+tokens/step = 32 * 256 = 8192
+tokens in 40000 steps = 327,680,000
+wall clock (CSV last row) = 2606.966 s (~43.45 min)
+~0.065 s/step
+
+Same architecture as TinyStories except vocab_size 32000:
+  2*32000*512 + 4*(4*512^2 + 3*512*1344 + 2*512) + 512 = 45,224,448
+
+This 43-minute wall clock is on an RTX 5090, not a B200, so it is not a leaderboard submission.

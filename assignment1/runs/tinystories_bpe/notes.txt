@@ -1,0 +1,44 @@
+TinyStories BPE provenance — copied to Mac 2026-09-07
+
+Original run (2026-09-01, desktop-pc, with --profile):
+  artifact: data/tinystories/tokenizer_train_10k.pkl
+  SHA-256: 329e23f764d0af86181093db35cde820079c024809cc19ae970fd5f7e20405c4
+  elapsed_seconds: 898.850 s (pickle metadata)
+  profiler: data/tinystories/tokenizer_train_10k.prof
+  SHA-256: f2a0713946a02a8853430af2a31e5f5b82326ef6e2d4adc90a268074eef35f7b
+  pstats dump: runs/tinystories_bpe/tokenizer_train_10k_prof.txt
+  profiler total: 898.848 s
+  pretokenize cumulative time: 775.617 s (~86%)
+  builtins.max (pair selection): 114.228 s cumulative / 61.110 s tottime (~13%)
+
+Optimized run (2026-09-05, desktop-pc):
+  command: train_bpe_tinystories.py --input data\TinyStoriesV2-GPT4-train.txt --output data\tinystories\tokenizer_train_10k_optimize.pkl --overwrite
+  artifact: data/tinystories/tokenizer_train_10k_optimize.pkl
+  SHA-256: ea375b42e1fd06f76042f2c185f4ff59ae2fe9f2e3b1b8c2d9ec9905ed3ae7bb
+  elapsed_seconds: 100.739 s (pickle metadata 100.73948430000019)
+  stdout: runs/tinystories_bpe/optimize_console.txt
+  pretok: unique_pretokens=59933 (wall-clock remainder of ~97 s after merge 3.3 s)
+  merge_done elapsed_s=3.3
+  did not overwrite tokenizer_train_10k.pkl
+
+Equality check (desktop 2026-09-07, then rechecked on Mac after copy):
+  script: runs/tinystories_bpe/compare_ts_bpe.py
+  desktop stdout: runs/tinystories_bpe/compare_ts_bpe.out
+  vocab_equal True
+  merges_equal True
+  special_equal True
+  vocab 10000 / merges 9743 both sides
+  longest token id 7160, b' accomplishment'
+
+Memory supplement (not an official timing run):
+  original 898.850-s run did not record peak RSS
+  sampled max Working Set: 847.69 MiB
+  sampled max Peak Working Set: 868.67 MiB
+  supplement elapsed: 411.631 s; code version was not independently preserved
+  remote artifact still on desktop: D:\desktop\data\tinystories\tokenizer_train_10k_memcheck.pkl
+
+Do not treat Working Set or Peak Working Set as peak RSS, and do not compare the 411.631-s
+supplement directly with the original or optimized timing runs.
+
+Not copied (optional, still on desktop):
+  D:\desktop\data\owt\tokenizer_train_32k_optimize.pkl

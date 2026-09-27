@@ -1,0 +1,34 @@
+TinyStories batch=32 sweep — DONE 2026-09-06 19:17 on desktop-pc
+
+Machine: Windows desktop RTX 3060 Ti 8GB
+Script: D:\desktop\train_lm.py
+Finished: 2026-09-06 19:17 (checkpoint_010000.pt + checkpoint_final.pt + log)
+
+Same model / data / schedule as bs_1, bs_64, and bs_128 (NOT the 40k main run):
+  vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344, RoPE θ=10000, params 22,696,448
+  data\tinystories\train.bin (541,229,347), valid.bin (5,465,883)
+  batch 32, steps 10000, warmup 500, cosine 10000, max_lr 1e-3, min_lr 1e-4, seed 42, device cuda
+  log-interval 10, eval-interval 500, checkpoint-interval 2500
+
+local copies:
+  runs/bs_32/training_log.csv
+checkpoints on desktop only (not copied):
+  D:\desktop\runs\bs_32\checkpoint_002500/5000/7500/10000/final.pt
+
+GPU mem: not sampled this run
+wall time: 2006.68 s (~33.4 min), ~0.201 s/step
+tokens/step = 32 * 256 = 8192
+tokens in 10000 steps = 81,920,000
+
+step     train    val     elapsed_s
+    1    9.276    9.276         1.7
+ 2500    1.946    1.915       501.3
+ 5000    1.665    1.737      1002.9
+ 7500    1.571    1.589      1505.0
+10000    1.558    1.574      2006.7
+
+final lr ≈ 1e-4, final grad_norm 0.438
+No NaN / Inf; run completed all 10000 steps.
+
+Do not confuse with runs/tinystories (batch 32, 40000 steps, warmup 2000, cosine 40000):
+  that run at step 10000 has train 1.630, val 1.656, lr still ~9.05e-4.

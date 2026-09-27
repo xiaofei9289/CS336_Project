@@ -193,6 +193,43 @@ class SwiGLU(nn.Module):
 
         return self.w2(gate * value)
 
+# ===== [新增：SiLU FFN] 开始 =====
+class SiLUFFN(nn.Module):
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int,
+        device=None,
+        dtype=None,
+    ):
+        super().__init__()
+
+        # 升维：(..., d_model) -> (..., d_ff)
+        # d_ff 由外部传入，不写死为 2048。
+        self.w1 = Linear(
+            in_features=d_model,
+            out_features=d_ff,
+            device=device,
+            dtype=dtype,
+        )
+
+        # 降维：(..., d_ff) -> (..., d_model)
+        self.w2 = Linear(
+            in_features=d_ff,
+            out_features=d_model,
+            device=device,
+            dtype=dtype,
+        )
+
+    def forward(
+        self,
+        x: Float[Tensor, "... d_model"],
+    ) -> Float[Tensor, "... d_model"]:
+        # 升维 -> SiLU -> 降维
+        # 没有 w3，也没有两个分支之间的门控乘法。
+        return self.w2(silu(self.w1(x)))
+# ===== [新增：SiLU FFN] 结束 =====
+
 
 def softmax(
     in_features: Float[Tensor, "..."],

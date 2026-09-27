@@ -1,0 +1,38 @@
+TinyStories NoPE ablation — DONE 2026-09-07 00:27 on desktop-pc
+
+Machine: Windows desktop RTX 3060 Ti 8GB
+Script: D:\desktop\train_lm.py --disable-rope
+
+Same model / data / schedule as bs_32 sweep EXCEPT no RoPE on Q/K
+(disable_rope=True; pre-norm, RMSNorm, ln_final, SwiGLU, causal mask kept):
+  vocab 10000, context 256, d_model 512, 4 layers, 16 heads, d_ff 1344
+  batch 32, steps 10000, warmup 500, cosine 10000, max_lr 1e-3, min_lr 1e-4, seed 42, device cuda
+
+local copy: runs/ablate_nope/training_log.csv
+checkpoints on desktop only:
+  D:\desktop\runs\ablate_nope\checkpoint_002500/5000/7500/10000/final.pt
+
+CSV is a single complete 10k run (header + 1001 log rows). Not concatenated.
+wall time: 1916.21 s (~31.9 min), ~0.192 s/step
+tokens/step = 32 * 256 = 8192
+tokens in 10000 steps = 81,920,000
+
+step     train    val     grad
+    1    9.276    9.274    1.21
+  500    2.937    2.961    0.57
+ 2500    2.085    2.051    0.48
+ 3500    1.992    1.918    1.50
+ 5000    1.761    1.846    0.44
+ 7500    1.680    1.687    0.46
+ 9000    1.559    1.646    0.47
+10000    1.648    1.674    0.48
+
+No NaN/Inf. No train/val explosion. Grad ~1.50 at step 3500 (still finite), then back to ~0.46.
+1e-3 completed; no lower-LR rerun.
+Same-schedule RoPE bs_32: val@10k 1.574; min val 1.551 at step 9000.
+NoPE min val 1.646 at step 9000.
+
+Plots vs bs_32: runs/ablate_nope/curve_step.png and curve_step_wallclock.png
+Linear y is the writeup figure (no explosion; log-y not needed).
+
+Do not confuse with runs/tinystories (40k, warmup 2000).

@@ -1,0 +1,44 @@
+input=data\TinyStoriesV2-GPT4-train.txt
+input_size_mib=2124.55
+vocab_size=10000
+desired_num_chunks=32
+special_tokens=['<|endoftext|>']
+pretok_done unique_pretokens=59933
+merge_start current_vocab=257 target_vocab=10000 remaining_merges=9743
+merge_step=1 vocab=258/10000 elapsed_s=0.0 merges_per_s=36.4 eta_s=267
+merge_step=500 vocab=757/10000 elapsed_s=1.9 merges_per_s=268.8 eta_s=34
+merge_step=1000 vocab=1257/10000 elapsed_s=2.1 merges_per_s=466.5 eta_s=19
+merge_step=1500 vocab=1757/10000 elapsed_s=2.3 merges_per_s=663.4 eta_s=12
+merge_step=2000 vocab=2257/10000 elapsed_s=2.4 merges_per_s=848.0 eta_s=9
+merge_step=2500 vocab=2757/10000 elapsed_s=2.4 merges_per_s=1025.7 eta_s=7
+merge_step=3000 vocab=3257/10000 elapsed_s=2.5 merges_per_s=1201.3 eta_s=6
+merge_step=3500 vocab=3757/10000 elapsed_s=2.5 merges_per_s=1373.3 eta_s=5
+merge_step=4000 vocab=4257/10000 elapsed_s=2.6 merges_per_s=1537.5 eta_s=4
+merge_step=4500 vocab=4757/10000 elapsed_s=2.7 merges_per_s=1691.0 eta_s=3
+merge_step=5000 vocab=5257/10000 elapsed_s=2.7 merges_per_s=1841.7 eta_s=3
+merge_step=5500 vocab=5757/10000 elapsed_s=2.8 merges_per_s=1981.7 eta_s=2
+merge_step=6000 vocab=6257/10000 elapsed_s=2.8 merges_per_s=2115.5 eta_s=2
+merge_step=6500 vocab=6757/10000 elapsed_s=2.9 merges_per_s=2246.8 eta_s=1
+merge_step=7000 vocab=7257/10000 elapsed_s=3.0 merges_per_s=2371.0 eta_s=1
+merge_step=7500 vocab=7757/10000 elapsed_s=3.0 merges_per_s=2491.0 eta_s=1
+merge_step=8000 vocab=8257/10000 elapsed_s=3.1 merges_per_s=2605.2 eta_s=1
+merge_step=8500 vocab=8757/10000 elapsed_s=3.1 merges_per_s=2714.3 eta_s=0
+merge_step=9000 vocab=9257/10000 elapsed_s=3.2 merges_per_s=2815.5 eta_s=0
+merge_step=9500 vocab=9757/10000 elapsed_s=3.3 merges_per_s=2908.5 eta_s=0
+merge_done merges=9743 vocab=10000 elapsed_s=3.3
+
+=== BPE training summary ===
+vocab_entries=10000
+merges=9743
+elapsed_seconds=100.739
+peak_rss_mib=unavailable
+longest_token_id=7160
+longest_token_bytes_length=15
+longest_token_bytes=b' accomplishment'
+longest_token_decoded=' accomplishment'
+longest_ordinary_token_id=7160
+longest_ordinary_token_bytes_length=15
+longest_ordinary_token_bytes=b' accomplishment'
+longest_ordinary_token_decoded=' accomplishment'
+saved=data\tinystories\tokenizer_train_10k_optimize.pkl
+pickle_round_trip=ok

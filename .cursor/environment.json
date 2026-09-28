@@ -1,0 +1,5 @@
+{
+  "name": "CS336 Project",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh"
+}

@@ -804,6 +804,21 @@ Write a script to benchmark the runtime of the all-reduce operation in the singl
 
 **Deliverable:** Plot(s) and/or table(s) comparing the various settings, with 2-3 sentences of commentary about your results and thoughts about how the various factors interact.
 
+**答案**
+
+脚本：`cs336_systems/benchmark_distributed_communication.py`。单机 `mp.spawn`，后端 NCCL。float32。预热 5 次（每次 `synchronize()`），正式 10 次 `all-reduce` 后同步一次，再除以 10。`all_gather_object` 汇总各 rank，表中为平均值；同配置下最大值与平均值几乎相同。1024 MB 按 \(1024\times 1024^{2}\) 字节计，即 1 GiB。未另作图。
+
+硬件：AutoDL 单机 6× NVIDIA RTX PRO 6000 Blackwell Server Edition。PyTorch 2.11.0+cu128（conda `base`）。进程列表含 2、4、6、8；可见 GPU 为 6，8 进程跳过。原始表：`results/rtxpro6000_all_reduce_results.csv`。
+
+| 数据量 | 2 进程（ms） | 4 进程（ms） | 6 进程（ms） |
+| --- | ---: | ---: | ---: |
+| 1 MiB | 0.0712 | 0.1129 | 0.1236 |
+| 10 MiB | 0.3703 | 0.5826 | 0.6821 |
+| 100 MiB | 3.4419 | 5.6098 | 6.8285 |
+| 1 GiB | 34.0251 | 59.0339 | 70.6647 |
+
+同一数据量下进程越多越慢：1 GiB 从 2 进程的 34.0 ms 增到 6 进程的 70.7 ms。每张卡都持有完整张量，增加的是集合通信的参与者。从 100 MiB 到 1 GiB，数据量约增 10.2 倍，耗时约增 9.9–10.5 倍，大消息接近按字节数增长。1 MiB 到 1 GiB 数据量增 1024 倍，2 进程耗时只增约 478 倍，小消息里固定启动开销占比更高。
+
 ---
 
 ### 5.2 A Naïve Implementation of Distributed Data Parallel Training
@@ -812,11 +827,29 @@ Write a script to benchmark the runtime of the all-reduce operation in the singl
 
 **Deliverable:** Implement a naïve form of distributed data parallel training that all-reduces individual parameter gradients after the backward pass. To test your implementation, implement `[adapters.get_ddp]` and (optionally) `[adapters.ddp_on_after_backward]`, then run `uv run pytest tests/test_ddp.py`.
 
+**答案**
+
+实现：`cs336_systems/ddp.py` 的 `DDPNaive`。初始化时把 rank 0 的参数 `broadcast` 到其余 rank。`forward` 转给原模型。`finish_gradient_synchronization` 在反向结束后，对每个已有梯度的参数做 `all_reduce`（求和）再除以 `world_size`。计时入口是 `cs336_systems/benchmark_ddp.py --mode naive`，直接构造 `DDPNaive`。
+
+`tests/adapters.py` 的 `get_ddp` 返回的是后面 5.3.2 的 `DDPOverlapIndividualParameters`，`ddp_on_after_backward` 调用 `finish_gradient_synchronization`。因此 `tests/test_ddp.py` 测的是重叠版，不覆盖朴素版 `DDPNaive`。2026-09-28 在本机 Mac 上 `uv run pytest tests/test_ddp.py` 连跑 5 次，每次 2 passed（ToyModel、ToyModelWithTiedWeights）。后端是 Gloo。有 hostname 解析警告，测试仍通过。
+
 #### Problem (`naive_ddp_benchmarking`): Naïve DDP Benchmarking (3 points)
 
 In this naïve DDP implementation, parameter gradients are individually all-reduced across ranks after each backward pass. To better understand the overhead of data parallel training, create a script to benchmark your previously-implemented language model when trained with this naïve implementation of DDP. Measure the total time per training step and the proportion of time spent on communicating gradients. Collect measurements in the single-node setting (1 node x 2 GPUs) for the xl model size described in Section 2.1.2.
 
 **Deliverable:** A description of your benchmarking setup, along with the measured time per training iteration and time spent communicating gradients for each setting.
+
+**答案**
+
+硬件：AutoDL 单机 2× NVIDIA RTX PRO 6000 Blackwell Server Edition。PyTorch 2.11.0+cu128，NCCL，conda `base`。命令：`python cs336_systems/benchmark_ddp.py --mode naive --world_size 2 --backend nccl`。
+
+xl：词表 10,000，context 512，\(d_{\mathrm{model}}=2560\)，32 层，32 头，\(d_{\mathrm{ff}}=10240\)。全局 batch 4，每卡 batch 2。预热 5 步，正式 10 步。损失是 logits 的 `mean()`。一步包含 `zero_grad`、前向、反向、逐参数梯度 `all-reduce` 和 AdamW。通信时间是反向结束后、`optimizer.step` 之前那段逐参数同步的墙钟，两端都做了 `synchronize()`。日志：`results/rtxpro6000_naive_ddp.txt`。
+
+| 配置 | 每步时间（ms） | 梯度通信（ms） | 通信占比 |
+| --- | ---: | ---: | ---: |
+| 1 node × 2 GPUs，xl | 1225.5480 | 576.8879 | 47.1% |
+
+10 步合计 12.255 s。梯度通信约占一步的一半。`barrier()` 的 `device_id` 警告出现在计时开始之前，没有计入这 10 步。
 
 ---
 
@@ -827,6 +860,17 @@ In this naïve DDP implementation, parameter gradients are individually all-redu
 Modify your minimal DDP implementation to communicate a tensor with flattened gradients from all parameters. Compare its performance with the minimal DDP implementation that issues an all-reduce for each parameter tensor under the previously-used conditions (1 node x 2 GPUs, xl model size as described in Section 2.1.2).
 
 **Deliverable:** The measured time per training iteration and time spent communicating gradients under distributed data parallel training with a single batched all-reduce call. 1-2 sentences comparing the results when batching vs. individually communicating gradients.
+
+**答案**
+
+实现：`cs336_systems/ddp.py` 的 `DDPBatch`。把全部参数梯度 `flatten` 成一个张量，做一次 `all-reduce` 再除以 `world_size`，然后 `unflatten` 写回。命令与 5.2 相同，只把 `--mode` 换成 `batch_ddp`。硬件仍是 2×RTX PRO 6000，xl，全局 batch 4。通信计时包住整个 `finish_gradient_synchronization`，因此展平版的「梯度通信」含拼接和拆开，不只是那一次 `all-reduce`。日志：`results/rtxpro6000_batch_ddp.txt`。
+
+| 实现 | 每步时间（ms） | 梯度通信（ms） | 通信占比 |
+| --- | ---: | ---: | ---: |
+| 逐参数 `all-reduce`（`naive`） | 1225.5480 | 576.8879 | 47.1% |
+| 展平后一次 `all-reduce`（`batch_ddp`） | 1276.8456 | 624.1740 | 48.9% |
+
+展平后一步慢了约 51 ms，通信段慢了约 47 ms。在这台机器上，把梯度拼成一个大张量再拆回去的开销，大于少发多次小 `all-reduce` 省下的启动开销。10 步合计 12.768 s。
 
 ---
 
@@ -858,15 +902,51 @@ for _ in range(train_steps):
 
 Then, to execute the tests, run `uv run pytest tests/test_ddp.py`. We recommend running the tests multiple times (e.g., 5) to ensure that it passes reliably.
 
+**答案**
+
+实现：`cs336_systems/ddp.py` 的 `DDPOverlapIndividualParameters`。初始化时 `broadcast` rank 0 的参数。每个需要梯度的参数注册 `register_post_accumulate_grad_hook`，梯度一累积完就 `all_reduce(..., async_op=True)`。`finish_gradient_synchronization` 对每个 handle 调 `wait()`，再把梯度和除以 `world_size`，然后才可以 `optimizer.step()`。`tests/adapters.py` 的 `get_ddp` 返回这个类，`ddp_on_after_backward` 调用 `finish_gradient_synchronization`。2026-09-28 在本机 Mac 上 `uv run pytest tests/test_ddp.py` 连跑 5 次，每次 2 passed（ToyModel、ToyModelWithTiedWeights），后端 Gloo。
+
 #### Problem (`ddp_overlap_individual_parameters_benchmarking`): DDP Overlapping Individual Parameters Benchmarking (1 point)
 
 **(a)** Benchmark the performance of your DDP implementation when overlapping backward pass computation with communication of individual parameter gradients. Compare its performance with our previously-studied settings (the minimal DDP implementation that either issues an all-reduce for each parameter tensor, or a single all-reduce on the concatenation of all parameter tensors) with the same setup: 1 node, 2 GPUs, and the xl model size described in Section 2.1.2.
 
 **Deliverable:** The measured time per training iteration when overlapping the backward pass with communication of individual parameter gradients, with 1-2 sentences comparing the results.
 
+**答案 (a)**
+
+命令：`python cs336_systems/benchmark_ddp.py --mode overlap_params --world_size 2 --backend nccl`。硬件与 xl 配置同 5.2。重叠版的通信在反向过程中发出，`finish_gradient_synchronization` 只负责等待，所以脚本不再单独报告一段通信时间。日志：`results/rtxpro6000_overlap_ddp.txt`。
+
+| 实现 | 每步时间（ms） |
+| --- | ---: |
+| 逐参数 `all-reduce`（`naive`） | 1225.5480 |
+| 展平后一次 `all-reduce`（`batch_ddp`） | 1276.8456 |
+| 逐参数通信与反向重叠（`overlap_params`） | 1022.0085 |
+
+重叠版一步 1022.0 ms，比逐参数版少 204 ms，比展平版少 255 ms。10 步合计 10.220 s。朴素版有 577 ms 落在反向之后的通信段；重叠之后整步只少了约 204 ms，说明通信没有全部藏进反向，仍有一部分留在关键路径上。
+
 **(b)** Instrument your benchmarking code (using the 1 node, 2 GPUs, xl model size setup) with the Nsight profiler, comparing the initial DDP implementation with this overlapped implementation. Visually compare the two traces, and provide a profiler screenshot demonstrating that one implementation overlaps compute with communication while the other doesn’t.
 
 **Deliverable:** 2 screenshots (one from the initial DDP implementation, and another from this DDP implementation that overlaps compute with communication) that visually show that communication is or isn’t overlapped with the backward pass.
+
+**答案 (b)**
+
+同一台 2×RTX PRO 6000、同一个 xl 配置。Profile 单独跑了 1 步预热加 1 步测量，只用来看时间线，不替换上面 10 步的计时表。命令是 `nsys profile --trace=cuda,nvtx,nccl`，脚本加了 `--nvtx --warmup 1 --steps 1`。报告：`nsys_reports/ddp_naive_rtxpro6000.nsys-rep`、`nsys_reports/ddp_overlap_rtxpro6000.nsys-rep`。下图用 GPU 0 的 kernel trace 画出：色带是 CPU 上的 NVTX 区间，色条是 GPU 上的计算或 NCCL。
+
+朴素版：NCCL 在 backward 区间结束之后才开始，一直持续到 optimizer 之前。Nsight Systems 里把测量步放大到约 20–25.5 秒后的界面：
+
+![naive DDP Nsight](mem_snapshots/ddp_naive_rtxpro6000_gui.png)
+
+同一段的 GPU kernel 导出图：
+
+![naive DDP timeline](mem_snapshots/ddp_naive_rtxpro6000_timeline.png)
+
+重叠版：NCCL 在 backward 区间中途已经开始，并继续延伸到后面的 optimizer 区间。通信和反向计算有一段同时在 GPU 上跑，但没有在反向结束时全部完成。Nsight Systems 里放大到大约 19–25 秒的界面：CUDA HW 上绿色计算大约到 21.2 秒结束，NCCL 行的活动在大约 22.8–24.5 秒，和后面的蓝色 kernel 叠在同一段时间里。
+
+![overlap DDP Nsight](mem_snapshots/ddp_overlap_rtxpro6000_gui.png)
+
+同一段的 GPU kernel 导出图：
+
+![overlap DDP timeline](mem_snapshots/ddp_overlap_rtxpro6000_timeline.png)
 
 ---
 

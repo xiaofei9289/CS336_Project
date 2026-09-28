@@ -50,7 +50,7 @@ def all_reduce_benchmark(rank, world_size, data_size, backend):
 
     elapsed_time = (end - start) / NUM_STEPS
     all_times = [None] * world_size
-    dist.gather_object(elapsed_time, all_times if rank == 0 else None, dst=0)
+    dist.all_gather_object(all_times, elapsed_time)
 
     if rank == 0:
         avg_ms = sum(all_times) / len(all_times) * 1000

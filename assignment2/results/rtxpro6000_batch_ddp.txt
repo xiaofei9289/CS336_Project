@@ -1,0 +1,11 @@
+2026-09-28 AutoDL 2× NVIDIA RTX PRO 6000 Blackwell Server Edition
+PyTorch 2.11.0+cu128, NCCL, conda base
+python cs336_systems/benchmark_ddp.py --mode batch_ddp --world_size 2 --backend nccl
+same xl / batch / warmup / loss as rtxpro6000_naive_ddp.txt
+grad sync times the whole finish_gradient_synchronization call (flatten, one all-reduce, unflatten)
+
+mode: batch_ddp
+total 10 steps: 12.768456s
+average step: 1276.8456 ms
+average grad sync: 624.1740 ms
+grad sync fraction: 0.4888

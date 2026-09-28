@@ -1,0 +1,11 @@
+2026-09-28 AutoDL 2× NVIDIA RTX PRO 6000 Blackwell Server Edition
+PyTorch 2.11.0+cu128, NCCL, conda base
+python cs336_systems/benchmark_ddp.py --mode overlap_params --world_size 2 --backend nccl
+same xl / batch / warmup / loss as rtxpro6000_naive_ddp.txt
+communication is launched during backward; finish_gradient_synchronization only waits
+the script does not report a separate grad-sync time for this mode
+
+mode: overlap_params
+total 10 steps: 10.220085s
+average step: 1022.0085 ms
+overlap mode: communication overlaps with backward

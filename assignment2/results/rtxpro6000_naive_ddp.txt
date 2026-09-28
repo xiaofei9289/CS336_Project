@@ -1,0 +1,13 @@
+2026-09-28 AutoDL 2× NVIDIA RTX PRO 6000 Blackwell Server Edition
+PyTorch 2.11.0+cu128, NCCL, conda base
+python cs336_systems/benchmark_ddp.py --mode naive --world_size 2 --backend nccl
+xl: vocab 10000, context 512, d_model 2560, 32 layers, 32 heads, d_ff 10240
+global batch 4 (local batch 2), warmup 5, measure 10
+loss = logits.mean()
+step includes zero_grad, forward, backward, per-parameter all-reduce, AdamW
+
+mode: naive
+total 10 steps: 12.255480s
+average step: 1225.5480 ms
+average grad sync: 576.8879 ms
+grad sync fraction: 0.4707

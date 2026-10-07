@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="1200" height="620" preserveAspectRatio="xMinYMin meet" viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="1200" height="620"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-620)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="1200" height="620" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="38" y="575" style="font-family: Helvetica-Bold; font-size: 25px;fill: rgb(8%,23%,34%); stroke:none;" transform="translate(0,1150) scale(1,-1)">GRPO: final validation accuracy across four seeds</text>
+			<text x="38" y="548" style="font-family: Helvetica; font-size: 15px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,1096) scale(1,-1)">OLMo-2-0425-1B | 1,024 questions | final rollout step 200 | dots = seeds; error bars = sample SD</text>
+			<path d="M 108,165 L 1128,165 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="93.328" y="161.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,322) scale(1,-1)">0</text>
+			<path d="M 108,228 L 1128,228 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="86.656" y="224.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,448) scale(1,-1)">14</text>
+			<path d="M 108,291 L 1128,291 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="86.656" y="287.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,574) scale(1,-1)">28</text>
+			<path d="M 108,354 L 1128,354 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="86.656" y="350.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,700) scale(1,-1)">42</text>
+			<path d="M 108,417 L 1128,417 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="86.656" y="413.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,826) scale(1,-1)">56</text>
+			<path d="M 108,480 L 1128,480 Z" style="stroke: rgb(89%,90%,92%); stroke-linecap: butt; stroke-width: 1;"/>
+			<text x="86.656" y="476.0" style="font-family: Helvetica; font-size: 12px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,952) scale(1,-1)">70</text>
+			<rect x="241.0" y="165" width="74.0" height="171.6064453125" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(65%,69%,74%); fill-rule: evenodd;"/>
+			<path d="M 278,258.996402 L 278,414.216488 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 270,258.996402 L 286,258.996402 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 270,414.216488 L 286,414.216488 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<circle cx="260.0" cy="380.771484375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="272.0" cy="370.224609375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="284.0" cy="220.37109375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="296.0" cy="375.05859375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="256.7375" y="429.21648826795524" style="font-family: Helvetica-Bold; font-size: 15px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,858) scale(1,-1)">38.1%</text>
+			<text x="251.623" y="143" style="font-family: Helvetica; font-size: 13px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,286) scale(1,-1)">Standard</text>
+			<rect x="581.0" y="165" width="74.0" height="238.51318359375" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(22%,51%,65%); fill-rule: evenodd;"/>
+			<path d="M 618,394.017369 L 618,413.008999 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 610,394.017369 L 626,394.017369 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 610,413.008999 L 626,413.008999 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<circle cx="600.0" cy="390.87890625" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="612.0" cy="408.896484375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="624.0" cy="412.412109375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="636.0" cy="401.865234375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="596.7375" y="428.00899860156574" style="font-family: Helvetica-Bold; font-size: 15px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,856) scale(1,-1)">53.0%</text>
+			<text x="590.5505" y="143" style="font-family: Helvetica; font-size: 13px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,286) scale(1,-1)">Off-policy</text>
+			<text x="573.566" y="126" style="font-family: Helvetica; font-size: 13px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,252) scale(1,-1)">without clipping</text>
+			<rect x="921.0" y="165" width="74.0" height="239.83154296875" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(8%,23%,34%); fill-rule: evenodd;"/>
+			<path d="M 958,395.074925 L 958,414.588161 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 950,395.074925 L 966,395.074925 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<path d="M 950,414.588161 L 966,414.588161 Z" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.5;"/>
+			<circle cx="940.0" cy="407.138671875" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="952.0" cy="411.09375" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="964.0" cy="410.654296875" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<circle cx="976.0" cy="390.439453125" r="4.3" style="stroke: rgb(14%,21%,28%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="936.7375" y="429.5881611296979" style="font-family: Helvetica-Bold; font-size: 15px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,859) scale(1,-1)">53.3%</text>
+			<text x="930.5505" y="143" style="font-family: Helvetica; font-size: 13px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,286) scale(1,-1)">Off-policy</text>
+			<text x="922.601" y="126" style="font-family: Helvetica; font-size: 13px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,252) scale(1,-1)">with clipping</text>
+			<text x="38" y="68" style="font-family: Helvetica; font-size: 14px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,136) scale(1,-1)">Questions were reused for sweep validation; this is not an untouched final test.</text>
+			<text x="38" y="42" style="font-family: Helvetica; font-size: 14px;fill: rgb(14%,21%,28%); stroke:none;" transform="translate(0,84) scale(1,-1)">Standard and off-policy settings are not matched on optimizer updates or compute.</text>
+		</g>
+	</g>
+</svg>

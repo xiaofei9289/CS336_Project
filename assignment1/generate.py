@@ -24,8 +24,8 @@ from cs336_basics.transformer import TransformerLM
 
 
 # These values must exactly match the training configuration.
-# 词表大小在 main() 中从 tokenizer 自动读取。
-# 以下结构超参数必须与训练配置一致。
+# Vocabulary size is read from the tokenizer in main().
+# The architecture hyperparameters below must match the training configuration.
 CONTEXT_LENGTH = 256
 D_MODEL = 512
 NUM_LAYERS = 4
@@ -251,7 +251,7 @@ def parse_args() -> argparse.Namespace:
         default=Path("data/tinystories/tokenizer_train_10k.pkl"),
     )
 
-    # 新增：指定后，将原始文本和生成设置保存到这个目录。
+    # When set, save the raw text and generation settings to this directory.
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -292,10 +292,10 @@ def main() -> None:
 
     tokenizer, vocab, special_tokens = load_tokenizer(args.tokenizer)
 
-    # 自动适配 TinyStories 的 10k 或 OWT 的 32k 词表。
+    # Automatically matches a 10k TinyStories vocab or a 32k OWT vocab.
     vocab_size = len(vocab)
 
-    # 模型要求 token ID 连续覆盖 0 到 vocab_size - 1。
+    # The model requires token IDs to cover 0 through vocab_size - 1 contiguously.
     if vocab_size == 0:
         raise ValueError("Tokenizer vocabulary is empty.")
 
@@ -360,8 +360,8 @@ def main() -> None:
     )
     stop_reason = "EOS" if stopped_by_eos else "max_tokens"
 
-    # 与原脚本的显示内容一致：prompt + 新生成文本。
-    # 直接解码，不做润色、删改或 strip()。
+    # Match the original script's display: prompt + newly generated text.
+    # Decode directly, without polishing, editing, or strip().
     raw_text = tokenizer.decode(all_ids)
 
     metadata = "\n".join(

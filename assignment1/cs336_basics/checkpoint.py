@@ -16,12 +16,12 @@ def save_checkpoint(
     out: CheckpointTarget,
 ) -> None:
     """
-    保存模型、优化器和当前迭代次数。
+    Save the model, optimizer, and current iteration.
 
-    out 可以是：
-    - 文件路径
-    - pathlib.Path
-    - 二进制 file-like 对象
+    out can be:
+    - a file path
+    - a pathlib.Path
+    - a binary file-like object
     """
 
     checkpoint = {
@@ -30,7 +30,7 @@ def save_checkpoint(
         "iteration": iteration,
     }
 
-    # torch.save 本身支持路径和二进制 file-like
+    # torch.save itself accepts a path or a binary file-like object
     torch.save(checkpoint, out)
 
 
@@ -40,27 +40,27 @@ def load_checkpoint(
     optimizer: Optimizer,
 ) -> int:
     """
-    将 checkpoint 原地加载进已经创建好的模型和优化器。
+    Load a checkpoint in place into an already constructed model and optimizer.
 
-    返回保存时的迭代次数。
+    Returns the iteration stored in the checkpoint.
     """
 
-    # 先加载完整的 checkpoint 字典
+    # Load the full checkpoint dictionary first
     checkpoint = torch.load(
         src,
         map_location="cpu",
         weights_only=True,
     )
 
-    # 原地恢复模型参数
+    # Restore model parameters in place
     model.load_state_dict(
         checkpoint["model_state_dict"]
     )
 
-    # 原地恢复 AdamW 的 m、v、step 和 param_groups
+    # Restore AdamW m, v, step, and param_groups in place
     optimizer.load_state_dict(
         checkpoint["optimizer_state_dict"]
     )
 
-    # 必须返回 iteration
+    # Must return the iteration
     return int(checkpoint["iteration"])

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
-    # nargs="+"：允许 --log 后面传入多个 CSV 路径。
+    # nargs="+": allow multiple CSV paths after --log.
     parser.add_argument(
         "--log",
         type=Path,
@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
         required=True,
     )
 
-    # 标签按顺序对应各份 CSV；不传时使用 CSV 的父目录名。
+    # Labels correspond to the CSVs in order; default to each CSV's parent directory name.
     parser.add_argument(
         "--labels",
         nargs="+",
@@ -46,13 +46,13 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
 
     if args.labels is not None and len(args.labels) != len(args.log):
-        parser.error("--labels 的数量必须与 --log 的文件数量一致")
+        parser.error("--labels must contain the same number of entries as --log")
 
     return args
 
 
 def read_log(path: Path) -> dict:
-    """读取一份 CSV，分别保存 train 和 validation 数据。"""
+    """Read one CSV and store train and validation data separately."""
     data = {
         "iterations": [],
         "elapsed_seconds": [],
@@ -71,7 +71,7 @@ def read_log(path: Path) -> dict:
             data["elapsed_seconds"].append(elapsed)
             data["train_losses"].append(float(row["train_loss"]))
 
-            # 保留原逻辑：仅读取 validation_loss 非空的行。
+            # Keep the original behavior: read only rows with a non-empty validation_loss.
             validation_loss = row["validation_loss"].strip()
             if validation_loss:
                 data["val_iterations"].append(iteration)
@@ -90,7 +90,7 @@ def main() -> None:
         else [path.parent.name for path in args.log]
     )
 
-    # 每份 CSV 只读取一次。
+    # Read each CSV only once.
     runs = [read_log(path) for path in args.log]
 
     step_output = (
@@ -99,7 +99,7 @@ def main() -> None:
         else args.log[0].parent / "lr_sweep_step.png"
     )
 
-    # 时间图与步数图保存到同一个目录，避免覆盖单次 run 的图。
+    # Save the time plot and the step plot in the same directory so they do not overwrite a single-run plot.
     wallclock_output = step_output.with_name(
         f"{step_output.stem}_wallclock{step_output.suffix}"
     )
@@ -122,7 +122,7 @@ def main() -> None:
     colors = plt.get_cmap("tab10").colors
 
     for train_key, val_key, xlabel, output in plots:
-        # 每张图创建两个子图，使用相同的纵轴范围。
+        # Create two subplots per figure, sharing the same y-axis range.
         figure, (train_axis, val_axis) = plt.subplots(
             1, 2,
             figsize=(13, 5),
@@ -130,7 +130,7 @@ def main() -> None:
             sharey=True,
         )
 
-        # 每个 run 都向两个子图各添加一条曲线。
+        # Add one curve per run to each subplot.
         for index, (data, label) in enumerate(zip(runs, labels)):
             color = colors[index % len(colors)]
 

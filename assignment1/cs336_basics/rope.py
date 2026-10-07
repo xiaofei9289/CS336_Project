@@ -15,17 +15,17 @@ class RotaryPositionalEmbedding(nn.Module):
 
         if d_k % 2 != 0:
             raise ValueError(
-                f"d_k 必须是偶数，但得到了 d_k={d_k}"
+                f"d_k must be even, but got d_k={d_k}"
             )
 
         self.theta = theta
         self.d_k = d_k
         self.max_seq_len = max_seq_len
 
-        # 对应维度：
+        # Corresponding dimensions:
         # 0, 2, 4, ..., d_k - 2
         #
-        # 每两个相邻维度共享一个旋转频率：
+        # Each pair of adjacent dimensions shares one rotation frequency:
         # (x0, x1), (x2, x3), ...
         pair_indices = torch.arange(
             0,
@@ -37,14 +37,14 @@ class RotaryPositionalEmbedding(nn.Module):
 
         # ω_i = theta^(-2i / d_k)
         #
-        # 因为 pair_indices 已经是：
+        # pair_indices is already:
         # 0, 2, 4, ...
-        # 所以直接除以 d_k
+        # so divide directly by d_k
         inverse_frequencies = theta ** (
             -pair_indices / d_k
         )
 
-        # 位置：
+        # Positions:
         # 0, 1, 2, ..., max_seq_len - 1
         positions = torch.arange(
             max_seq_len,
@@ -52,7 +52,7 @@ class RotaryPositionalEmbedding(nn.Module):
             dtype=torch.float32,
         )
 
-        # 每个位置、每个维度对的旋转角度
+        # Rotation angle for each position and dimension pair
         #
         # positions:           (max_seq_len,)
         # inverse_frequencies: (d_k / 2,)
@@ -63,7 +63,7 @@ class RotaryPositionalEmbedding(nn.Module):
         cos_cached = torch.cos(angles)
         sin_cached = torch.sin(angles)
 
-        # cos/sin 不是可训练参数，但需要跟随模型移动设备
+        # cos/sin are not trainable, but they should move with the model device
         self.register_buffer(
             "cos_cached",
             cos_cached,
@@ -84,24 +84,24 @@ class RotaryPositionalEmbedding(nn.Module):
 
         if in_query_or_key.shape[-1] != self.d_k:
             raise ValueError(
-                "输入最后一维必须等于 d_k，"
-                f"但输入为 {in_query_or_key.shape[-1]}，"
+                "The last input dimension must equal d_k, "
+                f"but the input is {in_query_or_key.shape[-1]}, "
                 f"d_k={self.d_k}"
             )
 
-        # 确保位置索引和缓存位于同一设备
+        # Keep position indices on the same device as the cache
         token_positions = token_positions.to(
             device=self.cos_cached.device
         )
 
-        # 根据真实 token_positions 取对应的 cos/sin
+        # Look up cos/sin for the actual token_positions
         #
-        # 例如 token_positions = [3, 7, 2]
-        # 就分别取缓存中的第 3、7、2 行
+        # For example, token_positions = [3, 7, 2]
+        # selects cache rows 3, 7, and 2
         cos = self.cos_cached[token_positions]
         sin = self.sin_cached[token_positions]
 
-        # 保持输出 dtype 与输入一致，例如 BF16
+        # Keep the output dtype equal to the input dtype, for example BF16
         cos = cos.to(
             device=in_query_or_key.device,
             dtype=in_query_or_key.dtype,
@@ -112,36 +112,36 @@ class RotaryPositionalEmbedding(nn.Module):
             dtype=in_query_or_key.dtype,
         )
 
-        # 如果输入中存在 head 维，而 token_positions 没有，
-        # 在 sequence_length 前补单例维度以支持广播。
+        # If the input has a head dimension and token_positions does not,
+        # insert a singleton dimension before sequence_length so they broadcast.
         #
-        # 例如：
-        # 输入：(batch, heads, seq, d_k)
-        # cos：(batch, seq, d_k/2)
+        # For example:
+        # input: (batch, heads, seq, d_k)
+        # cos:   (batch, seq, d_k/2)
         #
-        # 补成：(batch, 1, seq, d_k/2)
+        # becomes: (batch, 1, seq, d_k/2)
         while cos.ndim < in_query_or_key.ndim:
             cos = cos.unsqueeze(-3)
             sin = sin.unsqueeze(-3)
 
-        # 拆出每个二维 pair
+        # Split each 2D pair
         #
         # even: x0, x2, x4, ...
         # odd:  x1, x3, x5, ...
         even = in_query_or_key[..., 0::2]
         odd = in_query_or_key[..., 1::2]
 
-        # 二维旋转：
+        # 2D rotation:
         #
         # x_even' = x_even cos - x_odd sin
         # x_odd'  = x_even sin + x_odd cos
         rotated_even = even * cos - odd * sin
         rotated_odd = even * sin + odd * cos
 
-        # 先组合成：
+        # First stack into:
         # (..., sequence_length, d_k / 2, 2)
         #
-        # 然后还原为：
+        # then flatten back to:
         # (..., sequence_length, d_k)
         rotated = torch.stack(
             (rotated_even, rotated_odd),

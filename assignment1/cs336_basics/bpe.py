@@ -1,21 +1,21 @@
 """
-Byte-level BPE 训练所需的底层辅助函数。
+Low-level helpers for byte-level BPE training.
 
-本模块只负责无状态的基础操作：
-1. 初始化词表；
-2. GPT-2 预分词；
-3. 统计并选择相邻 token pair；
-4. 将选中的 pair 应用到 pre-token。
+This module only performs stateless primitive operations:
+1. Initialize the vocabulary;
+2. GPT-2 pre-tokenization;
+3. Count and select adjacent token pairs;
+4. Apply the selected pair to pre-tokens.
 
-完整训练流程由 ``train_bpe.py`` 负责，文本编码与解码由
-``tokenizer.py`` 中的 ``Tokenizer`` 负责。
-注意：本模块只负责无状态的基础操作，不负责训练流程。
+The full training loop lives in ``train_bpe.py``. Encoding and decoding
+live in ``Tokenizer`` in ``tokenizer.py``.
+This module does not own the training loop.
 """
 
 from collections import Counter, defaultdict
 import regex as regex
 
-# 训练和编码必须使用同一套 GPT-2 预分词规则。
+# Training and encoding must use the same GPT-2 pre-tokenization rules.
 GPT2_PRETOKEN_PATTERN = regex.compile(
     r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 )
@@ -24,45 +24,46 @@ TokenIds = tuple[int, ...]
 TokenPair = tuple[int, int]
 PretokenCounts = dict[TokenIds, int]
 
-# 函数01：初始化基础词表
+# Function 01: initialize the base vocabulary
 def initialize_vocab(
     vocab_size: int,
     special_tokens: list[str],
 ) -> dict[int, bytes]:
     """
-    创建 byte-level BPE 的初始词表。
+    Create the initial vocabulary for byte-level BPE.
 
-    初始词表包括：
-    1. 256 个基础 byte token；
-    2. 去重后的特殊 token。
+    The initial vocabulary contains:
+    1. 256 base byte tokens;
+    2. Deduplicated special tokens.
 
-    vocab_size 表示最终目标词表大小。
-    本函数不会提前创建BPE merge token，只用于检查目标大小是否足够。
+    vocab_size is the final target vocabulary size.
+    This function does not create BPE merge tokens early; it only checks
+    that the target size is large enough.
 """
-    # 1. 建立256个基础的byte token
+    # 1. Create the 256 base byte tokens
     vocab = {token_id: bytes([token_id]) for token_id in range(256)}
 
-    # 2. 加入特殊token，确保特殊Token ID不重复
-    # 2.1 去除重复的特殊token，同时保留原来的排列顺序
+    # 2. Add special tokens, and keep their IDs unique
+    # 2.1 Drop duplicate special tokens while preserving the original order
     unique_special_tokens = list(dict.fromkeys(special_tokens))
     
-    # 3. 确保初始化词表大小vocab_size = 256 + 特殊token的数量
-    # 3.1 把基础词表长度和特殊token数量相加，得到初始化词表大小
+    # 3. The initial vocabulary size is 256 plus the number of special tokens
+    # 3.1 Add the base vocabulary length and the special-token count
     initial_vocab_size = len(vocab) + len(unique_special_tokens)
-    # 3.2 确保输入词表大小vocab_size不小于初始化词表大小initial_vocab_size
+    # 3.2 The requested vocab_size must be at least the initial vocabulary size
     if vocab_size < initial_vocab_size:
         raise ValueError(
             f"Vocab size must be greater than or equal to {initial_vocab_size}"
             )
-    # 4. 把基础词表和特殊token合并，得到初始化词表
-    # 4.1 遍历每一个特殊token, 把每一个特殊token的byte添加到初始化词表中
+    # 4. Merge the base vocabulary and the special tokens
+    # 4.1 Append each special token's bytes to the initial vocabulary
     for special_token in unique_special_tokens:
         special_token_id = len(vocab)
         vocab[special_token_id] = special_token.encode('utf-8')
 
     return vocab
 
-# 函数02：把文本按照特殊token进行分割
+# Function 02: split text on special tokens
 
 def split_on_special_tokens(
     text: str,
@@ -70,96 +71,96 @@ def split_on_special_tokens(
 ) -> list[str]:
 
     """ 
-    按特殊 token 切开训练文本，并从结果中移除特殊 token。
+    Split training text on special tokens and drop those tokens from the result.
 
-    这是训练阶段的行为：特殊 token 只作为文档边界，不能参与普通
-    BPE pair 的统计。编码阶段需要保留特殊 token，因此由
-    ``Tokenizer._split_on_special_tokens`` 单独处理。
+    This is training-time behavior: special tokens are only document boundaries
+    and must not enter ordinary BPE pair counts. Encoding must keep special
+    tokens, so ``Tokenizer._split_on_special_tokens`` handles that separately.
         
     """
 
-    # 1. 把special token的列表去重，并保留原来的排列顺序
+    # 1. Deduplicate the special-token list while preserving the original order
     unique_special_tokens = list(dict.fromkeys(special_tokens))
 
-    # 2. 如果special token的列表为空，则直接返回文本，不对文本进行切分
+    # 2. If there are no special tokens, return the text unsplit
     if not unique_special_tokens:
         return [text]
 
-    # 3. 检查特殊token列表中是否有空字符串，禁止空字符串成为特殊token
+    # 3. Reject an empty string as a special token
     if any(token == "" for token in unique_special_tokens):
         raise ValueError("Special tokens list cannot contain empty strings")
 
-    # 4. 把文本按照特殊token进行分割
-    # 4.1 在特殊token列表中把较长的特殊token排在前面，较短的特殊token排在后面，避免前缀冲突
+    # 4. Split the text on special tokens
+    # 4.1 Put longer special tokens first so a prefix does not hide a longer match
     unique_special_tokens.sort(key=len, reverse=True)
-    # 4.2 转义特殊token, 即告诉正则表达式，把特殊 token 中的符号当作普通字符理解
-    # 4.2.1 建立escape tokens 列表，把特殊 token 中的符号当作普通字符理解
+    # 4.2 Escape special tokens so the regex treats their symbols as literal characters
+    # 4.2.1 Build the escaped-token list
     escaped_tokens = [regex.escape(token) for token in unique_special_tokens]
-    # 4.2.2 把escape tokens列表拼接成一个字符串，用|分隔
+    # 4.2.2 Join the escaped tokens with |
     special_tokens_pattern = regex.compile("|".join(escaped_tokens))
-    # 4.4 使用正则表达式模式匹配文本，并返回匹配到的列表
+    # 4.4 Split the text with the regex and return the pieces
     return special_tokens_pattern.split(text)
 
-#函数03：对文本片段进行预分词
+# Function 03: pre-tokenize text fragments
 def pretokenize(
     text: str,
     special_tokens: list[str],
 ) -> PretokenCounts:
     """
-    将训练文本转换为 ``byte ID tuple -> 出现次数`` 的频次表。
+    Turn training text into a frequency table of ``byte-ID tuple -> count``.
     """
 
-    # 0. 创建计数器
-    # key：一个 pre-token 对应的 byte 整数序列
-    # value：这个整数序列出现的次数
+    # 0. Create the counter
+    # key: the byte-integer sequence of one pre-token
+    # value: how many times that sequence occurs
     pretoken_counts: Counter[TokenIds] = Counter()
 
 
-    # 1. 先调用split_on_special_tokens函数，把文本按照特殊token进行分割
+    # 1. Split the text on special tokens first
     text_fragments = split_on_special_tokens(text, special_tokens)
     
-    # 2. 分别处理每一个普通token的文本片段
+    # 2. Handle each ordinary text fragment separately
     for text_fragment in text_fragments:
-        # 2.1 如果字符串为空，则跳过
+        # 2.1 Skip empty strings
         if text_fragment == "":
             continue
-        # 2.2 创建匹配结果列表，它不是用来统计频次，而是用来存储正则表达式匹配到的所有文本片段
+        # 2.2 Store every regex match so we can check that nothing was dropped
         matched_text_parts = []
         
-        # 3. 使用GPT-2正则进行预分词
+        # 3. Pre-tokenize with the GPT-2 regex
         for match in GPT2_PRETOKEN_PATTERN.finditer(text_fragment):
             pretoken_text = match.group(0)
             matched_text_parts.append(pretoken_text)
             
-            # 4. 把匹配到的文本片段转换成 utf-8 bytes
+            # 4. Encode the matched text as UTF-8 bytes
             pretoken_bytes = pretoken_text.encode('utf-8')
-            # 5. 把每个byte转化为整数，组成不可变的tuple
+            # 5. Turn each byte into an integer and store them in an immutable tuple
             pretoken_token_ids =tuple(pretoken_bytes)
-            # 6. 统计当前 byte 整数序列出现的次数
+            # 6. Count how often this byte-integer sequence occurs
             pretoken_counts[pretoken_token_ids] += 1
 
-        # 7. 确认正则没有漏掉
+        # 7. Confirm the regex did not drop any characters
         assert "".join(matched_text_parts) == text_fragment
         
     return pretoken_counts
 
 
-# 函数04：实现全局相邻pair统计
+# Function 04: count adjacent pairs globally
 def count_adjacent_pairs(
     pretoken_counts: dict[tuple[int, ...], int],
 ) -> dict[TokenPair, int]:
     """
-    按 pre-token 频次统计所有相邻 token pair 的全局频次。
+    Count the global frequency of every adjacent token pair, weighted by pre-token frequency.
     """
 
-    # 0. 创建计数器
-    # key：一个相邻pair对应的 byte 整数序列
-    # value：这个整数序列出现的次数
+    # 0. Create the counter
+    # key: the integer pair of one adjacent pair
+    # value: how many times that pair occurs
     adjacent_pair_counts: Counter[tuple[int, int]] = Counter()
     
-    # 1. 遍历pretoken_counts中的每一个整数序列
+    # 1. Walk every integer sequence in pretoken_counts
     for pretoken_token_ids, pretoken_frequency in pretoken_counts.items():
-        # 1.1 如果整数序列长度小于2，则跳过
+        # 1.1 Skip sequences shorter than 2
         if len(pretoken_token_ids) < 2:
             continue
         # 1.2 
@@ -171,12 +172,12 @@ def build_pair_index(
     pretoken_counts: dict[tuple[int, ...], int],
 ):
     """
-    返回：
-    1. pair_counts：
-       每个相邻 pair 在整个语料中的加权出现次数
+    Returns:
+    1. pair_counts:
+       Weighted count of each adjacent pair across the corpus
 
-    2. pair_to_pretokens：
-       每个 pair 出现在哪些 unique pre-token 中
+    2. pair_to_pretokens:
+       Which unique pre-tokens contain each pair
     """
 
     pair_counts = Counter()
@@ -184,16 +185,16 @@ def build_pair_index(
 
     for pretoken, frequency in pretoken_counts.items():
 
-        # 统计这个 pre-token 内部各 pair 出现几次
+        # Count how often each pair occurs inside this pre-token
         local_pair_counts = Counter(
             zip(pretoken, pretoken[1:])
         )
 
         for pair, occurrences in local_pair_counts.items():
-            # 出现次数 × 当前 pre-token 的语料频次
+            # Occurrences times this pre-token's corpus frequency
             pair_counts[pair] += occurrences * frequency
 
-            # 倒排索引只需要记录这个 pre-token 一次
+            # The inverted index only needs to record this pre-token once
             pair_to_pretokens[pair].add(pretoken)
 
     return pair_counts, pair_to_pretokens
@@ -202,19 +203,19 @@ def build_pair_index(
 
 
 
-# 函数05：选择全局词频最高的pair，频次相同时，选择对应byte pair字典序更大的pair
+# Function 05: pick the most frequent pair; break ties toward the lexicographically larger byte pair
 def select_best_pair(
     pair_counts: dict[tuple[int, int], int],
     vocab: dict[int, bytes],
 ) -> TokenPair | None:
     """
-    选择全局词频最高的pair，频次相同时，选择对应byte pair字典序更大的pair
+    Pick the globally most frequent pair. On a tie, pick the lexicographically larger byte pair.
     """
 
-    # 1. 如果pair_counts为空，则返回None
+    # 1. Return None when pair_counts is empty
     if not pair_counts:
         return None
-    # 2. 找到pair_counts中词频最高的pair
+    # 2. Find the highest-frequency pair in pair_counts
     best_pair = max(
         pair_counts,
         key = lambda pair:(pair_counts[pair], vocab[pair[0]], vocab[pair[1]])
@@ -222,23 +223,23 @@ def select_best_pair(
 
     return best_pair
 
-# 函数06：在单个pre-token中， 从左到右执行一捆非重叠的pair合并
+# Function 06: merge one non-overlapping run of the pair, left to right, inside a single pre-token
 def merge_pairs(
     token_ids: tuple[int, ...],
     target_pair: tuple[int, int],
     new_token_id: int,
 ) -> TokenIds:
     """
-    在单个pre-token中， 从左到右执行一捆非重叠的pair合并
+    Merge one non-overlapping run of the pair, left to right, inside a single pre-token
     """
 
-    # 1. 创建一个新的token_ids列表
+    # 1. Create a new token-id list
     merged_token_ids = []
-    # 2. 创建一个指针，用来记录当前遍历到的位置
+    # 2. Pointer to the current position
     current_index = 0
     # 3. 
     while current_index < len(token_ids):
-        # 3.1 如果当前位置的token_id和target_pair的第一个token_id和第二个token_id都匹配，则合并这两个token_id
+        # 3.1 If the current position matches both ids of target_pair, merge them
         if(
             current_index + 1 < len(token_ids) and
             token_ids[current_index] == target_pair[0] and
@@ -247,19 +248,19 @@ def merge_pairs(
             merged_token_ids.append(new_token_id)
             current_index += 2
         else:
-            # 3.2 如果当前位置的token_id和target_pair的第一个token_id和第二个token_id都不匹配，则直接添加当前token_id
+            # 3.2 Otherwise keep the current token id
             merged_token_ids.append(token_ids[current_index])
             current_index += 1
     return tuple(merged_token_ids)
 
 
-# 函数07：将选中的 pair 应用到所有 pre-token，并生成新的频次表。
+# Function 07: apply the selected pair to every pre-token and build the new frequency table.
 def merge_all_pretokens(
     pretoken_counts: PretokenCounts,
     pair_to_merge: TokenPair,
     new_token_id: int,
 ) -> PretokenCounts:
-    """将一个 pair 合并应用到全部 pre-token，并聚合新的频次表。"""
+    """Apply one pair merge to every pre-token and aggregate the new frequency table."""
     new_pretoken_counts: Counter[TokenIds] = Counter()
 
     for token_ids, frequency in pretoken_counts.items():
@@ -286,15 +287,15 @@ def merge_incrementally(
     new_token_id: int,
 ) -> None:
     """
-    把 pair_to_merge 合并成 new_token_id。
+    Merge pair_to_merge into new_token_id.
 
-    直接原地更新：
+    Update these structures in place:
     - pretoken_counts
     - pair_counts
     - pair_to_pretokens
     """
 
-    # 必须先复制，因为后面会修改倒排索引
+    # Copy first, because the inverted index is mutated below
     affected_pretokens = list(
         pair_to_pretokens.get(pair_to_merge, set())
     )
@@ -302,7 +303,7 @@ def merge_incrementally(
     if not affected_pretokens:
         return
 
-    # 先保存所有变化，避免边遍历边修改造成混乱
+    # Record every change first so we do not mutate the structure while iterating it
     changes = []
 
     for old_pretoken in affected_pretokens:
@@ -332,7 +333,7 @@ def merge_incrementally(
             )
         )
 
-    # 第一阶段：删除旧 pre-token 及其 pair 贡献
+    # Stage 1: remove the old pre-token and its pair contributions
     for (
         old_pretoken,
         new_pretoken,
@@ -346,18 +347,18 @@ def merge_incrementally(
         for old_pair, occurrences in old_local_counts.items():
             pair_counts[old_pair] -= occurrences * frequency
 
-            # 倒排索引中删除旧序列
+            # Drop the old sequence from the inverted index
             pretoken_set = pair_to_pretokens[old_pair]
             pretoken_set.discard(old_pretoken)
 
-            # 清理空项
+            # Drop empty entries
             if not pretoken_set:
                 del pair_to_pretokens[old_pair]
 
             if pair_counts[old_pair] == 0:
                 del pair_counts[old_pair]
 
-    # 第二阶段：加入新 pre-token 及其 pair 贡献
+    # Stage 2: add the new pre-token and its pair contributions
     for (
         old_pretoken,
         new_pretoken,
@@ -366,7 +367,7 @@ def merge_incrementally(
         new_local_counts,
     ) in changes:
 
-        # 通常不会发生碰撞，但使用累加写法更安全
+        # Collisions are rare, but adding is safer than assigning
         pretoken_counts[new_pretoken] = (
             pretoken_counts.get(new_pretoken, 0)
             + frequency

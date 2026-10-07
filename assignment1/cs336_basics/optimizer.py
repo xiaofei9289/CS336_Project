@@ -13,18 +13,18 @@ def get_lr_cosine_schedule(
     cosine_cycle_iters: int,
 ) -> float:
     """
-    根据当前迭代次数计算学习率。
+    Compute the learning rate for the current iteration.
     """
 
-    # 第一阶段：线性 warmup
+    # Stage 1: linear warmup
     if it <= warmup_iters:
-        # 没有 warmup 时，直接从最大学习率开始
+        # With no warmup, start directly at the maximum learning rate
         if warmup_iters == 0:
             return max_learning_rate
 
         return max_learning_rate * it / warmup_iters
 
-    # 第二阶段：余弦退火
+    # Stage 2: cosine annealing
     if it <= cosine_cycle_iters:
         cosine_progress = (
             (it - warmup_iters)
@@ -43,7 +43,7 @@ def get_lr_cosine_schedule(
             )
         )
 
-    # 第三阶段：保持最小学习率
+    # Stage 3: hold the minimum learning rate
     return min_learning_rate
 
 
@@ -73,7 +73,7 @@ class AdamW(torch.optim.Optimizer):
         if not 0 <= beta2 < 1:
             raise ValueError("beta2 must be in [0, 1)")
 
-        # 每一个 param_group 都可以拥有自己的一套超参数
+        # Each param group can have its own set of hyperparameters
         defaults = {
             "lr": lr,
             "betas": betas,
@@ -86,17 +86,17 @@ class AdamW(torch.optim.Optimizer):
     @torch.no_grad()
     def step(self, closure=None):
         """
-        执行一次 AdamW 参数更新。
+        Perform one AdamW parameter update.
         """
 
         loss = None
 
-        # 支持可选的 closure，虽然本次测试通常用不到
+        # Support an optional closure, although these tests usually do not use it
         if closure is not None:
             with torch.enable_grad():
                 loss = closure()
 
-        # 遍历不同的参数组
+        # Iterate over parameter groups
         for group in self.param_groups:
             lr = group["lr"]
             beta1, beta2 = group["betas"]
@@ -104,7 +104,7 @@ class AdamW(torch.optim.Optimizer):
             weight_decay = group["weight_decay"]
 
             for parameter in group["params"]:
-                # 没有梯度的参数直接跳过
+                # Skip parameters that have no gradient
                 if parameter.grad is None:
                     continue
 
@@ -115,20 +115,20 @@ class AdamW(torch.optim.Optimizer):
                         "AdamW does not support sparse gradients"
                     )
 
-                # 读取当前参数自己的优化器状态
+                # Read this parameter's optimizer state
                 state = self.state[parameter]
 
-                # 第一次遇到这个参数时初始化状态
+                # Initialize state the first time this parameter is seen
                 if len(state) == 0:
                     state["step"] = 0
 
-                    # 一阶动量 m
+                    # First moment m
                     state["exp_avg"] = torch.zeros_like(
                         parameter,
                         memory_format=torch.preserve_format,
                     )
 
-                    # 二阶动量 v
+                    # Second moment v
                     state["exp_avg_sq"] = torch.zeros_like(
                         parameter,
                         memory_format=torch.preserve_format,
@@ -137,18 +137,18 @@ class AdamW(torch.optim.Optimizer):
                 exp_avg = state["exp_avg"]
                 exp_avg_sq = state["exp_avg_sq"]
 
-                # 当前参数的更新次数从 1 开始
+                # This parameter's update count starts at 1
                 state["step"] += 1
                 step = state["step"]
 
-                # 1. 更新一阶动量
+                # 1. Update the first moment
                 # m = beta1 * m + (1 - beta1) * grad
                 exp_avg.mul_(beta1).add_(
                     grad,
                     alpha=1 - beta1,
                 )
 
-                # 2. 更新二阶动量
+                # 2. Update the second moment
                 # v = beta2 * v + (1 - beta2) * grad^2
                 exp_avg_sq.mul_(beta2).addcmul_(
                     grad,
@@ -156,17 +156,17 @@ class AdamW(torch.optim.Optimizer):
                     value=1 - beta2,
                 )
 
-                # 3. 计算偏差修正
+                # 3. Compute bias correction
                 bias_correction1 = 1 - beta1**step
                 bias_correction2 = 1 - beta2**step
 
-                # 4. 解耦权重衰减
+                # 4. Decoupled weight decay
                 # p = p - lr * weight_decay * p
                 parameter.mul_(
                     1 - lr * weight_decay
                 )
 
-                # 5. Adam 参数更新
+                # 5. Adam parameter update
                 #
                 # m_hat = m / bias_correction1
                 # sqrt(v_hat) = sqrt(v) / sqrt(bias_correction2)

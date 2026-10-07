@@ -188,7 +188,7 @@ def run_multihead_self_attention(
         dtype=in_features.dtype,
     )
 
-    # copy_ 属于原地操作，不应该被 autograd 记录
+    # copy_ is an in-place op and should not be recorded by autograd
     with torch.no_grad():
         mha.q_proj.weight.copy_(q_proj_weight)
         mha.k_proj.weight.copy_(k_proj_weight)
@@ -450,8 +450,8 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    # in_indices 是整数，不能用 in_indices.dtype
-    # 构造浮点模型参数。
+    # in_indices are integers, so do not use in_indices.dtype
+    # Build floating-point model parameters.
     model_dtype = weights[
         "token_embeddings.weight"
     ].dtype
@@ -469,13 +469,13 @@ def run_transformer_lm(
         dtype=model_dtype,
     )
 
-    # 模块参数名完全对齐时，可以严格加载
+    # Strict load is safe when module parameter names match exactly
     model.load_state_dict(
         weights,
         strict=True,
     )
 
-    # 返回 logits，不做 softmax
+    # Return logits without softmax
     return model(in_indices)
 
 

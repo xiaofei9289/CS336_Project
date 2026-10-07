@@ -11,35 +11,35 @@ def get_batch(
     device: str | torch.device,
 ) -> tuple[Tensor, Tensor]:
     """
-    从一维 token 序列中随机抽取 next-token 训练数据。
+    Randomly sample next-token training examples from a 1D token sequence.
 
-    返回：
+    Returns:
         x: (batch_size, context_length)
         y: (batch_size, context_length)
     """
 
     dataset_length = len(dataset)
 
-    # 每条样本需要 context_length + 1 个 token
+    # Each example needs context_length + 1 tokens
     if dataset_length < context_length + 1:
         raise ValueError(
             "dataset must contain at least "
             "context_length + 1 tokens"
         )
 
-    # 最大合法起点：
+    # Maximum valid start index:
     # start + context_length <= dataset_length - 1
     max_start = dataset_length - context_length - 1
 
-    # np.random.randint 的 high 是开区间，
-    # 所以传入 max_start + 1
+    # np.random.randint treats high as exclusive,
+    # so pass max_start + 1
     start_indices = np.random.randint(
         low=0,
         high=max_start + 1,
         size=batch_size,
     )
 
-    # 从每个起点截取 x 和右移一位后的 y
+    # Slice x from each start, and y shifted one token to the right
     x_array = np.stack([
         dataset[start : start + context_length]
         for start in start_indices
@@ -50,7 +50,7 @@ def get_batch(
         for start in start_indices
     ])
 
-    # 转换成 LongTensor，并移动到指定设备
+    # Convert to LongTensor and move to the requested device
     x = torch.tensor(
         x_array,
         dtype=torch.long,

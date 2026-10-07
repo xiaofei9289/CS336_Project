@@ -23,17 +23,17 @@ from .bpe_optimize import (
     select_best_pair_from_heap,
 )
 
-# 训练 byte-level BPE Tokenizer 的步骤
+# Steps for training a byte-level BPE tokenizer
 
-# 步骤一：词表初始化
+# Step 1: initialize the vocabulary
 
-# 步骤二：合并 pair
+# Step 2: merge a pair
 
-# 步骤三：添加新 token
+# Step 3: add the new token
 
-# 步骤四：重复步骤二和步骤三，直到词表大小达到目标大小
+# Step 4: repeat steps 2 and 3 until the vocabulary reaches the target size
 
-# 步骤五：保存词表  
+# Step 5: save the vocabulary
 
 
 ChunkTask = tuple[
@@ -47,11 +47,11 @@ ChunkTask = tuple[
 def _pretokenize_chunk(
     task: ChunkTask,
 ) -> Counter[tuple[int, ...]]:
-    """在子进程中读取并预分词一个 ``[start, end)`` 文件区间。"""
+    """Read and pre-tokenize one ``[start, end)`` file span in a worker process."""
     input_path, start, end, special_tokens = task
 
-    # worker 只接收路径和整数偏移；原始 bytes 和解码后的 str 都只存在
-    # 于当前 worker 内，不通过进程间通信传递。
+    # A worker receives only a path and integer offsets. The raw bytes and the
+    # decoded str stay inside that worker and are not sent across processes.
     with open(input_path, "rb") as file:
         file.seek(start)
         chunk_text = file.read(end - start).decode("utf-8")
@@ -69,30 +69,30 @@ def train_bpe(
     **kwargs,
 ) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
 
-    """在给定语料上训练 byte-level BPE tokenizer。
+    """Train a byte-level BPE tokenizer on the given corpus.
 
     Returns:
-        ``vocab``：token ID 到 token bytes 的映射。
-        ``merges``：按训练先后排列的 byte pair。
+        ``vocab``: map from token ID to token bytes.
+        ``merges``: byte pairs in the order they were learned.
 
-    ``desired_num_chunks`` 控制语料块数，默认 32；``num_workers`` 控制
-    pretok 进程数，默认不超过 32。二者互相独立，merge 阶段仍在主进程
-    中单线程执行。
+    ``desired_num_chunks`` sets the number of corpus chunks and defaults to 32.
+    ``num_workers`` sets the number of pretok processes and defaults to at most 32.
+    The two are independent. Merging still runs single-threaded in the main process.
 
-    Windows 使用 spawn，调用方必须在 ``if __name__ == "__main__":``
-    保护下调用本函数。
+    Windows uses spawn, so callers must invoke this function under
+    ``if __name__ == "__main__":``.
     """
-    # 阶段一：初始化词表并把语料转换为 pre-token 频次表。
-    # 1. 初始化基础词表和特殊token
+    # Stage 1: initialize the vocabulary and turn the corpus into a pre-token frequency table.
+    # 1. Initialize the base vocabulary and special tokens
     vocab = initialize_vocab(
         vocab_size = vocab_size,
         special_tokens = special_tokens,
     )
 
-    # 2. 流式读取并预分词，避免把整份语料一次性解码成巨大的 str。
-    # 只有在 <|endoftext|> 也被声明为特殊 token 时，才能把它安全地
-    # 用作块边界：这样分块既不会切断普通 pre-token，它本身也不会进入
-    # 后面的 pair 统计。
+    # 2. Stream and pre-tokenize so the whole corpus is not decoded into one huge str.
+    # <|endoftext|> is a safe chunk boundary only when it is also a special token:
+    # chunks then do not cut ordinary pre-tokens, and the boundary itself does not
+    # enter later pair counts.
     split_special_token = "<|endoftext|>"
     desired_num_chunks = kwargs.get("desired_num_chunks", 32)
     num_workers = kwargs.get(
@@ -107,11 +107,11 @@ def train_bpe(
         raise ValueError("num_workers must be a positive integer")
 
     if split_special_token not in special_tokens:
-        # 没有安全的文档边界时不能任意按 byte 偏移切块，否则可能改变
-        # GPT-2 pre-tokenization 的结果。
+        # Without a safe document boundary, do not split on arbitrary byte offsets.
+        # That can change GPT-2 pre-tokenization.
         desired_num_chunks = 1
 
-    # 主进程只负责寻找边界，不读取或解码整块文本。
+    # The main process only finds boundaries. It does not read or decode whole chunks.
     with open(input_path, "rb") as file:
         boundaries = find_chunk_boundaries(
             file=file,
@@ -135,12 +135,13 @@ def train_bpe(
     effective_num_workers = min(num_workers, len(chunk_tasks))
 
     if effective_num_workers <= 1:
-        # 单块或显式 num_workers=1 时不创建进程池，方便小语料测试。
+        # Do not create a process pool for one chunk or an explicit num_workers=1.
+        # That keeps small-corpus tests simple.
         for task in chunk_tasks:
             pretoken_counts.update(_pretokenize_chunk(task))
     else:
-        # 只有 read + decode + pretokenize 在子进程并行执行。
-        # 主进程收到一块的 Counter 后立即累加；merge 不进入进程池。
+        # Only read + decode + pretokenize run in parallel in workers.
+        # The main process adds each Counter as soon as it arrives. Merging stays out of the pool.
         with Pool(processes=effective_num_workers) as pool:
             for chunk_pretoken_counts in pool.imap_unordered(
                 _pretokenize_chunk,
@@ -155,9 +156,9 @@ def train_bpe(
         flush=True,
     )
     
-    # 阶段二：反复选择全局最佳 pair，并将其加入词表。
+    # Stage 2: repeatedly select the globally best pair and add it to the vocabulary.
 
-    # 4. 按训练顺序保存byte pair
+    # 4. Save byte pairs in training order
     merges: list[tuple[bytes,bytes]] = []
 
     pair_counts, pair_to_pretokens = build_pair_index(
@@ -176,7 +177,7 @@ def train_bpe(
         flush=True,
     )
 
-    # 6. 重复执行合并pair，直到词表大小达到目标大小
+    # 6. Keep merging pairs until the vocabulary reaches the target size
     while len(vocab) < vocab_size and pair_counts:
         best_pair = select_best_pair_from_heap(
             pair_heap=pair_heap,
@@ -188,20 +189,20 @@ def train_bpe(
                 "pair heap is empty while pair_counts is not empty"
             )
 
-        # best_pair 是两个旧 token ID
+        # best_pair is two old token IDs
         left_token_bytes = vocab[best_pair[0]]
         right_token_bytes = vocab[best_pair[1]]
 
-        # 当前词表的 ID 连续，因此 len(vocab) 就是下一个 ID
+        # Vocabulary IDs are contiguous, so len(vocab) is the next ID
         new_token_id = max(vocab) + 1
 
-        # 创建新的合并 token
+        # Create the new merged token
         vocab[new_token_id] = (
             left_token_bytes
             + right_token_bytes
         )
 
-        # merges 保存 bytes pair，而不是 token ID pair
+        # merges stores the byte pair, not the token-ID pair
         merges.append(
             (left_token_bytes, right_token_bytes)
         )
@@ -221,8 +222,9 @@ def train_bpe(
             vocab=vocab,
         )
 
-        # 懒更新会保留旧条目。堆膨胀到活动 pair 数量的 4 倍以上时
-        # 偶尔重建一次，避免低频旧条目长期占用过多内存。
+        # Lazy updates keep stale entries. When the heap grows past 4 times the
+        # number of live pairs, rebuild it so old low-frequency entries do not
+        # occupy memory for long.
         if (
             pair_counts
             and len(pair_heap)

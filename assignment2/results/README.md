@@ -10,5 +10,6 @@
 - `rtxpro6000_naive_ddp.txt`：2026-09-28 2×RTX PRO 6000 的朴素 DDP，xl，每步与梯度通信时间
 - `rtxpro6000_batch_ddp.txt`：同机同配置的展平梯度 DDP
 - `rtxpro6000_overlap_ddp.txt`：同机同配置的重叠通信 DDP，只有每步时间
+- `rtxpro6000_leaderboard.txt`：2026-09-29 4×RTX PRO 6000 第九章自测。要留的数是 SDPA + `torch.compile`，do_bench 中位数 9775 ms。原始输出在 `leaderboard_4x6000/`。不是 2×B200 官方成绩
 - `smoke/all_reduce_results.csv`：与上一份字节相同，是脚本默认文件名留下的副本
 - `smoke/*_smoke.csv`：attention / Flash 试跑，正文不用

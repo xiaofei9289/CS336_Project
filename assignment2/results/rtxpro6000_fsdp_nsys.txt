@@ -1,0 +1,15 @@
+# FSDP all-gather vs forward (2026-09-29)
+# Machine: AutoDL 2x RTX PRO 6000, PyTorch 2.11.0+cu128, Nsight Systems 2026.5.1
+# Script: python -m cs336_systems.benchmark_fsdp --profile
+# xl, context 512, batch 4 on each rank, FP32, NCCL, world_size 2
+# One warmup step, then one measured step inside NVTX range "measurement"
+# Report: /root/autodl-tmp/nsys/fsdp_xl_rtxpro6000.nsys-rep
+# CSV: nsys_stats/fsdp_xl_rtxpro6000_nvtx_gpu_proj_trace.csv
+# Times below are GPU projected durations for PID 9491. PID 9492 is the other rank.
+
+forward CPU 224.785 ms, GPU projected 445.796 ms
+other rank forward CPU 232.320 ms, GPU projected 453.235 ms
+sharded Linear/Embedding modules in the forward: 226
+modules whose compute starts after that module's all-gather ends: 226
+all-gather GPU ms: median 1.243, mean 1.468, max 4.240
+wait_weights GPU ms: median 0.026, mean 0.065, max 0.148, sum 14.582

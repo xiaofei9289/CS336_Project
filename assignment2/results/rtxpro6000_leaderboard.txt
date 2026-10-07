@@ -1,0 +1,63 @@
+2026-09-29 AutoDL 4× NVIDIA RTX PRO 6000 Blackwell Server Edition
+容器 autodl-container-lhy2360kfm-5d42460d
+每卡 97887 MiB，驱动 580.95.05
+PyTorch 2.11.0+cu128，CUDA 12.8，Triton 3.6.0，conda base
+这是本机自测，不是 2×B200 的官方成绩。
+
+讲义配置：batch 形状 (2, 2, 32768)，vocab 151936，d_model 4096，d_ff 11008，
+34 层，32 头，bf16，因果。数据并行 2 × 张量并行 2。
+损失是词表并行交叉熵的均值，等于 cross_entropy(...).sum()。
+每层激活检查点。两个副本同时算。
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+空缓存：rm -rf ~/.triton/cache，TORCHINDUCTOR_CACHE_DIR=/tmp/empty-inductor
+do_bench warmup=10000 rep=30000（毫秒）
+
+CPU 检查：python -m leaderboard.benchmark --check
+logit_max_abs=1.192e-06 loss_abs=0 embed_grad=5.588e-09 q_grad=8.062e-09 lm_head_grad=2.258e-08
+check passed
+
+1. Triton 反向，未编译
+   python -m leaderboard.benchmark
+   do_bench 中位数 105563.078125 ms
+   空缓存整次约 15.5 分钟，超过讲义 10 分钟
+   原始输出 results/leaderboard_4x6000/timing.txt
+
+2. PyTorch SDPA，未编译
+   attention=sdpa
+   单步第二步 15.396 s，峰值 GiB 44.7 41.3 44.7 41.3
+   do_bench 中位数 15395.8046875 ms
+   空缓存整次约 3.6 分钟
+   原始输出 results/leaderboard_4x6000/timing_sdpa.txt
+
+3. PyTorch SDPA，torch.compile 每个 Transformer 块（本次要留的数）
+   python -m leaderboard.benchmark --compile
+   单步第二步 9.961 s，峰值 GiB 44.7 41.3 44.7 41.3
+   do_bench 中位数 9775.345052083334 ms（约 9.78 s）
+   空缓存整次约 3.3 分钟
+   反向有 AccumulateGrad stream 不一致警告，运行退出码 0
+   原始输出 results/leaderboard_4x6000/timing_compile.txt
+
+同一次编译配置的分段计时（--breakdown，一步）：
+step 12.483 s，forward 2.961 s，backward 8.663 s，AdamW 0.857 s
+attention_fwd 最长卡 0.907 s
+cross_entropy_fwd 最长卡 0.207 s
+cross_entropy_bwd 最长卡 0.141 s
+这段不是 --compile 之后的 9.78 s。
+
+没有留下的失败：
+关掉检查点：前向 OOM，申请 512 MiB，GPU 0 已分配 94.03 GiB
+隔层检查点：前向 OOM，申请 344 MiB，GPU 0 已分配 94.06 GiB
+代码已改回每层检查点。
+
+4. 两张卡，只做张量并行，batch 不拆。SDPA + torch.compile + 每层检查点。
+   开机后 nvidia-smi 只看到 2 张 RTX PRO 6000。
+   python -m leaderboard.benchmark --once --compile
+   第二步 18.237 s，峰值 GiB 63.8 60.3
+   python -m leaderboard.benchmark --compile
+   do_bench 中位数 18732.75 ms（约 18.73 s）
+   空缓存整次约 3.5 分钟
+   同样有 AccumulateGrad stream 警告，退出码 0
+   原始输出 results/leaderboard_4x6000/timing_compile_2gpu.txt
+   高于 10 秒线。官方机器是 2×B200，这是同一代码路径在本机两张卡上的自测。
+
+Mac 上 leaderboard/model.py、leaderboard/benchmark.py 含两卡路径。

@@ -1,0 +1,7 @@
+
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+
+============================== 4 passed in 5.71s ===============================

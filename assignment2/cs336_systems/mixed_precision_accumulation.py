@@ -1,4 +1,4 @@
-"""mixed_precision_accumulation — 讲义第 6 页原代码。
+"""mixed_precision_accumulation — handout code from page 6.
 
   python -m cs336_systems.mixed_precision_accumulation
 """

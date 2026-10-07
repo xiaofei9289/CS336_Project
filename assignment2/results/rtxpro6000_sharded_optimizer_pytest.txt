@@ -1,0 +1,29 @@
+# Sharded optimizer correctness (2026-09-29)
+# Machine: AutoDL autodl-container-0k07c6dhtz-22e6acd7, conda base
+# Command: python -m pytest -q tests/test_sharded_optimizer.py
+# Repeated 5 times. Gloo, 2 processes. CUDA available, tensors on GPU.
+
+=== run 1 ===
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModel] PASSED
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModelWithTiedWeights] PASSED
+2 passed in 11.01s
+
+=== run 2 ===
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModel] PASSED
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModelWithTiedWeights] PASSED
+2 passed in 11.42s
+
+=== run 3 ===
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModel] PASSED
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModelWithTiedWeights] PASSED
+2 passed in 11.27s
+
+=== run 4 ===
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModel] PASSED
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModelWithTiedWeights] PASSED
+2 passed in 11.12s
+
+=== run 5 ===
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModel] PASSED
+tests/test_sharded_optimizer.py::test_sharded_optimizer[ToyModelWithTiedWeights] PASSED
+2 passed in 10.74s

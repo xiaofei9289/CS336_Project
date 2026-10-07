@@ -1,0 +1,790 @@
+
+tests/test_fsdp.py::test_fsdp_correctness[fp32] [W929 15:05:51.690140000 socket.cpp:764] [c10d] The client socket has failed to connect to [localhost]:12390 (errno: 1 - Operation not permitted).
+[W929 15:05:51.690348000 socket.cpp:764] [c10d] The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+[E929 15:05:51.690544000 socket.cpp:818] [c10d] The client socket has failed to connect to any network address of (localhost, 12390).
+[W929 15:05:51.691039000 TCPStore.cpp:347] [c10d] TCP client failed to connect/validate to host localhost:12390 - retrying (try=0, timeout=1800000ms, delay=272ms): The client socket has failed to connect to any network address of (localhost, 12390). The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+Exception raised from run at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/socket.cpp:821 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x108401320 in libc10.dylib)
+frame #1: c10d::detail::Socket::connect(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, c10d::detail::SocketOptions const&) + 916 (0x11d4307cc in libtorch_cpu.dylib)
+frame #2: c10d::detail::TCPClient::connect(c10d::detail::SocketAddress const&, c10d::TCPStoreOptions const&, std::__1::shared_ptr<c10d::Backoff>) + 184 (0x11d3b5804 in libtorch_cpu.dylib)
+frame #3: c10d::TCPStore::TCPStore(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, c10d::TCPStoreOptions const&) + 1012 (0x11d3b5fec in libtorch_cpu.dylib)
+frame #4: c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>::make<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&) + 168 (0x10ab1f084 in libtorch_python.dylib)
+frame #5: std::__1::enable_if<std::is_void<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>>::value, pybind11::detail::void_type>::type pybind11::detail::argument_loader<pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool>::call<void, pybind11::detail::void_type, void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&>(void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&) && + 176 (0x10ab1ec10 in libtorch_python.dylib)
+frame #6: void pybind11::cpp_function::initialize<void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), void, pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool, pybind11::name, pybind11::is_method, pybind11::sibling, pybind11::detail::is_new_style_constructor, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&&, void (*)(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&, pybind11::detail::is_new_style_constructor const&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) + 92 (0x10ab1eac0 in libtorch_python.dylib)
+frame #7: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) + 4804 (0x109f26c64 in libtorch_python.dylib)
+frame #8: cfunction_call + 72 (0x1025199a4 in python3.12)
+frame #9: _PyObject_MakeTpCall + 360 (0x1022b4198 in python3.12)
+frame #10: method_vectorcall.llvm.1575366197512965037 + 892 (0x102545604 in python3.12)
+frame #11: _PyObject_Call + 276 (0x1022e64f8 in python3.12)
+frame #12: slot_tp_init + 1824 (0x102567464 in python3.12)
+frame #13: type_call + 148 (0x102564c20 in python3.12)
+frame #14: pybind11_meta_call + 40 (0x109f22354 in libtorch_python.dylib)
+frame #15: _PyEval_EvalFrameDefault + 177868 (0x102328914 in python3.12)
+frame #16: gen_iternext + 144 (0x10254d154 in python3.12)
+frame #17: builtin_next + 72 (0x10257f418 in python3.12)
+frame #18: cfunction_vectorcall_FASTCALL.llvm.4931199582930304286 + 96 (0x10255d110 in python3.12)
+frame #19: _PyEval_EvalFrameDefault + 175640 (0x102328060 in python3.12)
+frame #20: PyEval_EvalCode + 216 (0x1023d7314 in python3.12)
+frame #21: run_mod.llvm.8254905201739415976 + 284 (0x1023d716c in python3.12)
+frame #22: PyRun_SimpleStringFlags + 212 (0x102480fdc in python3.12)
+frame #23: Py_RunMain + 1004 (0x10247d834 in python3.12)
+frame #24: pymain_main.llvm.5481960788121177684 + 456 (0x1024445b8 in python3.12)
+frame #25: main + 36 (0x1024443e4 in python3.12)
+frame #26: start + 6992 (0x18127fe00 in dyld)
+
+[W929 15:05:51.143451000 socket.cpp:764] [c10d] The client socket has failed to connect to [localhost]:12390 (errno: 1 - Operation not permitted).
+[W929 15:05:51.143713000 socket.cpp:764] [c10d] The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+[E929 15:05:51.143782000 socket.cpp:818] [c10d] The client socket has failed to connect to any network address of (localhost, 12390).
+[W929 15:05:51.143875000 TCPStore.cpp:347] [c10d] TCP client failed to connect/validate to host localhost:12390 - retrying (try=1, timeout=1800000ms, delay=878ms): The client socket has failed to connect to any network address of (localhost, 12390). The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+Exception raised from run at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/socket.cpp:821 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x108401320 in libc10.dylib)
+frame #1: c10d::detail::Socket::connect(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, c10d::detail::SocketOptions const&) + 916 (0x11d4307cc in libtorch_cpu.dylib)
+frame #2: c10d::detail::TCPClient::connect(c10d::detail::SocketAddress const&, c10d::TCPStoreOptions const&, std::__1::shared_ptr<c10d::Backoff>) + 184 (0x11d3b5804 in libtorch_cpu.dylib)
+frame #3: c10d::TCPStore::TCPStore(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, c10d::TCPStoreOptions const&) + 1012 (0x11d3b5fec in libtorch_cpu.dylib)
+frame #4: c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>::make<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&) + 168 (0x10ab1f084 in libtorch_python.dylib)
+frame #5: std::__1::enable_if<std::is_void<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>>::value, pybind11::detail::void_type>::type pybind11::detail::argument_loader<pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool>::call<void, pybind11::detail::void_type, void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&>(void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&) && + 176 (0x10ab1ec10 in libtorch_python.dylib)
+frame #6: void pybind11::cpp_function::initialize<void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), void, pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool, pybind11::name, pybind11::is_method, pybind11::sibling, pybind11::detail::is_new_style_constructor, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&&, void (*)(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&, pybind11::detail::is_new_style_constructor const&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) + 92 (0x10ab1eac0 in libtorch_python.dylib)
+frame #7: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) + 4804 (0x109f26c64 in libtorch_python.dylib)
+frame #8: cfunction_call + 72 (0x1025199a4 in python3.12)
+frame #9: _PyObject_MakeTpCall + 360 (0x1022b4198 in python3.12)
+frame #10: method_vectorcall.llvm.1575366197512965037 + 892 (0x102545604 in python3.12)
+frame #11: _PyObject_Call + 276 (0x1022e64f8 in python3.12)
+frame #12: slot_tp_init + 1824 (0x102567464 in python3.12)
+frame #13: type_call + 148 (0x102564c20 in python3.12)
+frame #14: pybind11_meta_call + 40 (0x109f22354 in libtorch_python.dylib)
+frame #15: _PyEval_EvalFrameDefault + 177868 (0x102328914 in python3.12)
+frame #16: gen_iternext + 144 (0x10254d154 in python3.12)
+frame #17: builtin_next + 72 (0x10257f418 in python3.12)
+frame #18: cfunction_vectorcall_FASTCALL.llvm.4931199582930304286 + 96 (0x10255d110 in python3.12)
+frame #19: _PyEval_EvalFrameDefault + 175640 (0x102328060 in python3.12)
+frame #20: PyEval_EvalCode + 216 (0x1023d7314 in python3.12)
+frame #21: run_mod.llvm.8254905201739415976 + 284 (0x1023d716c in python3.12)
+frame #22: PyRun_SimpleStringFlags + 212 (0x102480fdc in python3.12)
+frame #23: Py_RunMain + 1004 (0x10247d834 in python3.12)
+frame #24: pymain_main.llvm.5481960788121177684 + 456 (0x1024445b8 in python3.12)
+frame #25: main + 36 (0x1024443e4 in python3.12)
+frame #26: start + 6992 (0x18127fe00 in dyld)
+
+W0929 15:05:51.579000 19583 .venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:165] Terminating process 19706 via signal SIGTERM
+FAILED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] [W929 15:05:52.149165000 socket.cpp:764] [c10d] The client socket has failed to connect to [localhost]:12390 (errno: 1 - Operation not permitted).
+[W929 15:05:52.149349000 socket.cpp:764] [c10d] The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+[E929 15:05:52.149404000 socket.cpp:818] [c10d] The client socket has failed to connect to any network address of (localhost, 12390).
+[W929 15:05:52.149489000 TCPStore.cpp:347] [c10d] TCP client failed to connect/validate to host localhost:12390 - retrying (try=0, timeout=1800000ms, delay=516ms): The client socket has failed to connect to any network address of (localhost, 12390). The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+Exception raised from run at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/socket.cpp:821 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x106b8d320 in libc10.dylib)
+frame #1: c10d::detail::Socket::connect(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, c10d::detail::SocketOptions const&) + 916 (0x11bbbc7cc in libtorch_cpu.dylib)
+frame #2: c10d::detail::TCPClient::connect(c10d::detail::SocketAddress const&, c10d::TCPStoreOptions const&, std::__1::shared_ptr<c10d::Backoff>) + 184 (0x11bb41804 in libtorch_cpu.dylib)
+frame #3: c10d::TCPStore::TCPStore(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, c10d::TCPStoreOptions const&) + 1012 (0x11bb41fec in libtorch_cpu.dylib)
+frame #4: c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>::make<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&) + 168 (0x1092ab084 in libtorch_python.dylib)
+frame #5: std::__1::enable_if<std::is_void<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>>::value, pybind11::detail::void_type>::type pybind11::detail::argument_loader<pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool>::call<void, pybind11::detail::void_type, void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&>(void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&) && + 176 (0x1092aac10 in libtorch_python.dylib)
+frame #6: void pybind11::cpp_function::initialize<void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), void, pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool, pybind11::name, pybind11::is_method, pybind11::sibling, pybind11::detail::is_new_style_constructor, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&&, void (*)(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&, pybind11::detail::is_new_style_constructor const&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) + 92 (0x1092aaac0 in libtorch_python.dylib)
+frame #7: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) + 4804 (0x1086b2c64 in libtorch_python.dylib)
+frame #8: cfunction_call + 72 (0x100bc99a4 in python3.12)
+frame #9: _PyObject_MakeTpCall + 360 (0x100964198 in python3.12)
+frame #10: method_vectorcall.llvm.1575366197512965037 + 892 (0x100bf5604 in python3.12)
+frame #11: _PyObject_Call + 276 (0x1009964f8 in python3.12)
+frame #12: slot_tp_init + 1824 (0x100c17464 in python3.12)
+frame #13: type_call + 148 (0x100c14c20 in python3.12)
+frame #14: pybind11_meta_call + 40 (0x1086ae354 in libtorch_python.dylib)
+frame #15: _PyEval_EvalFrameDefault + 177868 (0x1009d8914 in python3.12)
+frame #16: gen_iternext + 144 (0x100bfd154 in python3.12)
+frame #17: builtin_next + 72 (0x100c2f418 in python3.12)
+frame #18: cfunction_vectorcall_FASTCALL.llvm.4931199582930304286 + 96 (0x100c0d110 in python3.12)
+frame #19: _PyEval_EvalFrameDefault + 175640 (0x1009d8060 in python3.12)
+frame #20: PyEval_EvalCode + 216 (0x100a87314 in python3.12)
+frame #21: run_mod.llvm.8254905201739415976 + 284 (0x100a8716c in python3.12)
+frame #22: PyRun_SimpleStringFlags + 212 (0x100b30fdc in python3.12)
+frame #23: Py_RunMain + 1004 (0x100b2d834 in python3.12)
+frame #24: pymain_main.llvm.5481960788121177684 + 456 (0x100af45b8 in python3.12)
+frame #25: main + 36 (0x100af43e4 in python3.12)
+frame #26: start + 6992 (0x18127fe00 in dyld)
+
+W0929 15:05:52.795000 19583 .venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:165] Terminating process 19712 via signal SIGTERM
+FAILED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] [W929 15:05:53.350985000 socket.cpp:764] [c10d] The client socket has failed to connect to [localhost]:12390 (errno: 1 - Operation not permitted).
+[W929 15:05:53.351186000 socket.cpp:764] [c10d] The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+[E929 15:05:53.351276000 socket.cpp:818] [c10d] The client socket has failed to connect to any network address of (localhost, 12390).
+[W929 15:05:53.351359000 TCPStore.cpp:347] [c10d] TCP client failed to connect/validate to host localhost:12390 - retrying (try=0, timeout=1800000ms, delay=711ms): The client socket has failed to connect to any network address of (localhost, 12390). The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+Exception raised from run at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/socket.cpp:821 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x1083ed320 in libc10.dylib)
+frame #1: c10d::detail::Socket::connect(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, c10d::detail::SocketOptions const&) + 916 (0x11d41c7cc in libtorch_cpu.dylib)
+frame #2: c10d::detail::TCPClient::connect(c10d::detail::SocketAddress const&, c10d::TCPStoreOptions const&, std::__1::shared_ptr<c10d::Backoff>) + 184 (0x11d3a1804 in libtorch_cpu.dylib)
+frame #3: c10d::TCPStore::TCPStore(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, c10d::TCPStoreOptions const&) + 1012 (0x11d3a1fec in libtorch_cpu.dylib)
+frame #4: c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>::make<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&) + 168 (0x10ab0b084 in libtorch_python.dylib)
+frame #5: std::__1::enable_if<std::is_void<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>>::value, pybind11::detail::void_type>::type pybind11::detail::argument_loader<pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool>::call<void, pybind11::detail::void_type, void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&>(void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&) && + 176 (0x10ab0ac10 in libtorch_python.dylib)
+frame #6: void pybind11::cpp_function::initialize<void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), void, pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool, pybind11::name, pybind11::is_method, pybind11::sibling, pybind11::detail::is_new_style_constructor, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&&, void (*)(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&, pybind11::detail::is_new_style_constructor const&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) + 92 (0x10ab0aac0 in libtorch_python.dylib)
+frame #7: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) + 4804 (0x109f12c64 in libtorch_python.dylib)
+frame #8: cfunction_call + 72 (0x1024719a4 in python3.12)
+frame #9: _PyObject_MakeTpCall + 360 (0x10220c198 in python3.12)
+frame #10: method_vectorcall.llvm.1575366197512965037 + 892 (0x10249d604 in python3.12)
+frame #11: _PyObject_Call + 276 (0x10223e4f8 in python3.12)
+frame #12: slot_tp_init + 1824 (0x1024bf464 in python3.12)
+frame #13: type_call + 148 (0x1024bcc20 in python3.12)
+frame #14: pybind11_meta_call + 40 (0x109f0e354 in libtorch_python.dylib)
+frame #15: _PyEval_EvalFrameDefault + 177868 (0x102280914 in python3.12)
+frame #16: gen_iternext + 144 (0x1024a5154 in python3.12)
+frame #17: builtin_next + 72 (0x1024d7418 in python3.12)
+frame #18: cfunction_vectorcall_FASTCALL.llvm.4931199582930304286 + 96 (0x1024b5110 in python3.12)
+frame #19: _PyEval_EvalFrameDefault + 175640 (0x102280060 in python3.12)
+frame #20: PyEval_EvalCode + 216 (0x10232f314 in python3.12)
+frame #21: run_mod.llvm.8254905201739415976 + 284 (0x10232f16c in python3.12)
+frame #22: PyRun_SimpleStringFlags + 212 (0x1023d8fdc in python3.12)
+frame #23: Py_RunMain + 1004 (0x1023d5834 in python3.12)
+frame #24: pymain_main.llvm.5481960788121177684 + 456 (0x10239c5b8 in python3.12)
+frame #25: main + 36 (0x10239c3e4 in python3.12)
+frame #26: start + 6992 (0x18127fe00 in dyld)
+
+W0929 15:05:53.977000 19583 .venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:165] Terminating process 19717 via signal SIGTERM
+FAILED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] [W929 15:05:54.525571000 socket.cpp:764] [c10d] The client socket has failed to connect to [localhost]:12390 (errno: 1 - Operation not permitted).
+[W929 15:05:54.525753000 socket.cpp:764] [c10d] The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+[E929 15:05:54.525807000 socket.cpp:818] [c10d] The client socket has failed to connect to any network address of (localhost, 12390).
+[W929 15:05:54.525892000 TCPStore.cpp:347] [c10d] TCP client failed to connect/validate to host localhost:12390 - retrying (try=0, timeout=1800000ms, delay=441ms): The client socket has failed to connect to any network address of (localhost, 12390). The client socket has failed to connect to localhost:12390 (errno: 1 - Operation not permitted).
+Exception raised from run at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/socket.cpp:821 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x108c79320 in libc10.dylib)
+frame #1: c10d::detail::Socket::connect(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, c10d::detail::SocketOptions const&) + 916 (0x11dca87cc in libtorch_cpu.dylib)
+frame #2: c10d::detail::TCPClient::connect(c10d::detail::SocketAddress const&, c10d::TCPStoreOptions const&, std::__1::shared_ptr<c10d::Backoff>) + 184 (0x11dc2d804 in libtorch_cpu.dylib)
+frame #3: c10d::TCPStore::TCPStore(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, c10d::TCPStoreOptions const&) + 1012 (0x11dc2dfec in libtorch_cpu.dylib)
+frame #4: c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>::make<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, c10d::TCPStoreOptions&) + 168 (0x10b397084 in libtorch_python.dylib)
+frame #5: std::__1::enable_if<std::is_void<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>>::value, pybind11::detail::void_type>::type pybind11::detail::argument_loader<pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool>::call<void, pybind11::detail::void_type, void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&>(void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool)&) && + 176 (0x10b396c10 in libtorch_python.dylib)
+frame #6: void pybind11::cpp_function::initialize<void pybind11::detail::initimpl::factory<torch::distributed::c10d::(anonymous namespace)::c10d_init(_object*, _object*)::$_53, pybind11::detail::void_type (*)(), c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>> (std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::detail::void_type ()>::execute<pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24]) &&::'lambda'(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), void, pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool, pybind11::name, pybind11::is_method, pybind11::sibling, pybind11::detail::is_new_style_constructor, pybind11::arg, pybind11::arg, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, pybind11::arg_v, char [24]>(pybind11::class_<c10d::TCPStore, c10::intrusive_ptr<c10d::TCPStore, c10::detail::intrusive_target_default_null_type<c10d::TCPStore>>>&&, void (*)(pybind11::detail::value_and_holder&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, unsigned short, std::__1::optional<int>, bool, std::__1::chrono::duration<long long, std::__1::ratio<1l, 1000l>>, bool, bool, std::__1::optional<int>, bool), pybind11::name const&, pybind11::is_method const&, pybind11::sibling const&, pybind11::detail::is_new_style_constructor const&, pybind11::arg const&, pybind11::arg const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, pybind11::arg_v const&, char const (&) [24])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) + 92 (0x10b396ac0 in libtorch_python.dylib)
+frame #7: pybind11::cpp_function::dispatcher(_object*, _object*, _object*) + 4804 (0x10a79ec64 in libtorch_python.dylib)
+frame #8: cfunction_call + 72 (0x102cd19a4 in python3.12)
+frame #9: _PyObject_MakeTpCall + 360 (0x102a6c198 in python3.12)
+frame #10: method_vectorcall.llvm.1575366197512965037 + 892 (0x102cfd604 in python3.12)
+frame #11: _PyObject_Call + 276 (0x102a9e4f8 in python3.12)
+frame #12: slot_tp_init + 1824 (0x102d1f464 in python3.12)
+frame #13: type_call + 148 (0x102d1cc20 in python3.12)
+frame #14: pybind11_meta_call + 40 (0x10a79a354 in libtorch_python.dylib)
+frame #15: _PyEval_EvalFrameDefault + 177868 (0x102ae0914 in python3.12)
+frame #16: gen_iternext + 144 (0x102d05154 in python3.12)
+frame #17: builtin_next + 72 (0x102d37418 in python3.12)
+frame #18: cfunction_vectorcall_FASTCALL.llvm.4931199582930304286 + 96 (0x102d15110 in python3.12)
+frame #19: _PyEval_EvalFrameDefault + 175640 (0x102ae0060 in python3.12)
+frame #20: PyEval_EvalCode + 216 (0x102b8f314 in python3.12)
+frame #21: run_mod.llvm.8254905201739415976 + 284 (0x102b8f16c in python3.12)
+frame #22: PyRun_SimpleStringFlags + 212 (0x102c38fdc in python3.12)
+frame #23: Py_RunMain + 1004 (0x102c35834 in python3.12)
+frame #24: pymain_main.llvm.5481960788121177684 + 456 (0x102bfc5b8 in python3.12)
+frame #25: main + 36 (0x102bfc3e4 in python3.12)
+frame #26: start + 6992 (0x18127fe00 in dyld)
+
+W0929 15:05:55.162000 19583 .venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:165] Terminating process 19722 via signal SIGTERM
+FAILED
+
+=================================== FAILURES ===================================
+_________________________ test_fsdp_correctness[fp32] __________________________
+
+compute_dtype = None
+
+    @pytest.mark.filterwarnings("error")
+    @pytest.mark.parametrize("compute_dtype", [None, torch.float16], ids=["fp32", "fp16"])
+    def test_fsdp_correctness(compute_dtype):
+        """Test that FSDP produces the same results as non-parallel training."""
+        world_size = 2
+>       mp.spawn(
+            _test_fsdp_correctness,
+            args=(world_size, compute_dtype),
+            nprocs=world_size,
+            join=True,
+        )
+
+tests/test_fsdp.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:340: in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method="spawn")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:296: in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.multiprocessing.spawn.ProcessContext object at 0x10fdfba40>
+timeout = None, grace_period = None
+
+    def join(self, timeout: float | None = None, grace_period: float | None = None):
+        r"""Join one or more processes within spawn context.
+    
+        Attempt to join one or more processes in this spawn context.
+        If one of them exited with a non-zero exit status, this function
+        kills the remaining processes (optionally with a grace period)
+        and raises an exception with the cause of the first process exiting.
+    
+        Returns ``True`` if all processes have been joined successfully,
+        ``False`` if there are more processes that need to be joined.
+    
+        Args:
+            timeout (float): Wait this long (in seconds) before giving up on waiting.
+            grace_period (float): When any processes fail, wait this long (in seconds)
+                for others to shutdown gracefully before terminating them. If they
+                still don't exit, wait another grace period before killing them.
+        """
+        # Ensure this function can be called even when we're done.
+        if len(self.sentinels) == 0:
+            return True
+    
+        # Wait for any process to fail or all of them to succeed.
+        ready = multiprocessing.connection.wait(
+            self.sentinels.keys(),
+            timeout=timeout,
+        )
+    
+        error_index = None
+        for sentinel in ready:
+            index = self.sentinels.pop(sentinel)
+            process = self.processes[index]
+            process.join()
+            if process.exitcode != 0:
+                error_index = index
+                break
+    
+        # Return if there was no error.
+        if error_index is None:
+            # Return whether or not all processes have been joined.
+            return len(self.sentinels) == 0
+        # An error occurred. Clean-up all processes before returning.
+        # First, allow a grace period for processes to shutdown themselves.
+        if grace_period is not None:
+            self._join_procs_with_timeout(grace_period)
+        # Then, terminate processes that are still alive. Try SIGTERM first.
+        for process in self.processes:
+            if process.is_alive():
+                log.warning("Terminating process %s via signal SIGTERM", process.pid)
+                process.terminate()
+    
+        # Try SIGKILL if the process isn't going down after another grace_period.
+        # The reason is related to python signal handling is limited
+        # to main thread and if that is in c/c++ land and stuck it won't
+        # to handle it. We have seen processes getting stuck not handling
+        # SIGTERM for the above reason.
+        self._join_procs_with_timeout(30 if grace_period is None else grace_period)
+        for process in self.processes:
+            if process.is_alive():
+                log.warning(
+                    "Unable to shutdown process %s via SIGTERM , forcefully exiting via SIGKILL",
+                    process.pid,
+                )
+                process.kill()
+            process.join()
+    
+        # The file will only be created if the process crashed.
+        failed_process = self.processes[error_index]
+        if not os.access(self.error_files[error_index], os.R_OK):
+            exitcode = self.processes[error_index].exitcode
+            if exitcode < 0:
+                try:
+                    name = signal.Signals(-exitcode).name
+                except ValueError:
+                    name = f"<Unknown signal {-exitcode}>"
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with signal {name}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                    signal_name=name,
+                )
+            else:
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with exit code {exitcode:d}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                )
+    
+        with open(self.error_files[error_index], "rb") as fh:
+            original_trace = pickle.load(fh)
+        msg = f"\n\n-- Process {error_index:d} terminated with the following error:\n"
+        msg += original_trace
+>       raise ProcessRaisedException(msg, error_index, failed_process.pid)
+E       torch.multiprocessing.spawn.ProcessRaisedException: 
+E       
+E       -- Process 0 terminated with the following error:
+E       Traceback (most recent call last):
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 87, in _wrap
+E           fn(i, *args)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/test_fsdp.py", line 120, in _test_fsdp_correctness
+E           device = _setup_process_group(rank=rank, world_size=world_size, backend="gloo")
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/common.py", line 87, in _setup_process_group
+E           dist.init_process_group(backend, rank=rank, world_size=world_size)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+E           return func(*args, **kwargs)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+E           func_return = func(*args, **kwargs)
+E                         ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1831, in init_process_group
+E           store, rank, world_size = next(rendezvous_iterator)
+E                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 280, in _env_rendezvous_handler
+E           store = _create_c10d_store(
+E                   ^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+E           return TCPStore(
+E                  ^^^^^^^^^
+E       torch.distributed.DistNetworkError: The server socket has failed to bind. port: 12390, useIpv6: 0, code: -1, name: EPERM, message: operation not permitted
+
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:211: ProcessRaisedException
+_________________________ test_fsdp_correctness[fp16] __________________________
+
+compute_dtype = torch.float16
+
+    @pytest.mark.filterwarnings("error")
+    @pytest.mark.parametrize("compute_dtype", [None, torch.float16], ids=["fp32", "fp16"])
+    def test_fsdp_correctness(compute_dtype):
+        """Test that FSDP produces the same results as non-parallel training."""
+        world_size = 2
+>       mp.spawn(
+            _test_fsdp_correctness,
+            args=(world_size, compute_dtype),
+            nprocs=world_size,
+            join=True,
+        )
+
+tests/test_fsdp.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:340: in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method="spawn")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:296: in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.multiprocessing.spawn.ProcessContext object at 0x110141ee0>
+timeout = None, grace_period = None
+
+    def join(self, timeout: float | None = None, grace_period: float | None = None):
+        r"""Join one or more processes within spawn context.
+    
+        Attempt to join one or more processes in this spawn context.
+        If one of them exited with a non-zero exit status, this function
+        kills the remaining processes (optionally with a grace period)
+        and raises an exception with the cause of the first process exiting.
+    
+        Returns ``True`` if all processes have been joined successfully,
+        ``False`` if there are more processes that need to be joined.
+    
+        Args:
+            timeout (float): Wait this long (in seconds) before giving up on waiting.
+            grace_period (float): When any processes fail, wait this long (in seconds)
+                for others to shutdown gracefully before terminating them. If they
+                still don't exit, wait another grace period before killing them.
+        """
+        # Ensure this function can be called even when we're done.
+        if len(self.sentinels) == 0:
+            return True
+    
+        # Wait for any process to fail or all of them to succeed.
+        ready = multiprocessing.connection.wait(
+            self.sentinels.keys(),
+            timeout=timeout,
+        )
+    
+        error_index = None
+        for sentinel in ready:
+            index = self.sentinels.pop(sentinel)
+            process = self.processes[index]
+            process.join()
+            if process.exitcode != 0:
+                error_index = index
+                break
+    
+        # Return if there was no error.
+        if error_index is None:
+            # Return whether or not all processes have been joined.
+            return len(self.sentinels) == 0
+        # An error occurred. Clean-up all processes before returning.
+        # First, allow a grace period for processes to shutdown themselves.
+        if grace_period is not None:
+            self._join_procs_with_timeout(grace_period)
+        # Then, terminate processes that are still alive. Try SIGTERM first.
+        for process in self.processes:
+            if process.is_alive():
+                log.warning("Terminating process %s via signal SIGTERM", process.pid)
+                process.terminate()
+    
+        # Try SIGKILL if the process isn't going down after another grace_period.
+        # The reason is related to python signal handling is limited
+        # to main thread and if that is in c/c++ land and stuck it won't
+        # to handle it. We have seen processes getting stuck not handling
+        # SIGTERM for the above reason.
+        self._join_procs_with_timeout(30 if grace_period is None else grace_period)
+        for process in self.processes:
+            if process.is_alive():
+                log.warning(
+                    "Unable to shutdown process %s via SIGTERM , forcefully exiting via SIGKILL",
+                    process.pid,
+                )
+                process.kill()
+            process.join()
+    
+        # The file will only be created if the process crashed.
+        failed_process = self.processes[error_index]
+        if not os.access(self.error_files[error_index], os.R_OK):
+            exitcode = self.processes[error_index].exitcode
+            if exitcode < 0:
+                try:
+                    name = signal.Signals(-exitcode).name
+                except ValueError:
+                    name = f"<Unknown signal {-exitcode}>"
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with signal {name}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                    signal_name=name,
+                )
+            else:
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with exit code {exitcode:d}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                )
+    
+        with open(self.error_files[error_index], "rb") as fh:
+            original_trace = pickle.load(fh)
+        msg = f"\n\n-- Process {error_index:d} terminated with the following error:\n"
+        msg += original_trace
+>       raise ProcessRaisedException(msg, error_index, failed_process.pid)
+E       torch.multiprocessing.spawn.ProcessRaisedException: 
+E       
+E       -- Process 0 terminated with the following error:
+E       Traceback (most recent call last):
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 87, in _wrap
+E           fn(i, *args)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/test_fsdp.py", line 120, in _test_fsdp_correctness
+E           device = _setup_process_group(rank=rank, world_size=world_size, backend="gloo")
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/common.py", line 87, in _setup_process_group
+E           dist.init_process_group(backend, rank=rank, world_size=world_size)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+E           return func(*args, **kwargs)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+E           func_return = func(*args, **kwargs)
+E                         ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1831, in init_process_group
+E           store, rank, world_size = next(rendezvous_iterator)
+E                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 280, in _env_rendezvous_handler
+E           store = _create_c10d_store(
+E                   ^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+E           return TCPStore(
+E                  ^^^^^^^^^
+E       torch.distributed.DistNetworkError: The server socket has failed to bind. port: 12390, useIpv6: 0, code: -1, name: EPERM, message: operation not permitted
+
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:211: ProcessRaisedException
+________________________ test_fsdp_gradient_sync[fp32] _________________________
+
+compute_dtype = None
+
+    @pytest.mark.filterwarnings("error")
+    @pytest.mark.parametrize("compute_dtype", [None, torch.float16], ids=["fp32", "fp16"])
+    def test_fsdp_gradient_sync(compute_dtype):
+        """Test that gradients are properly synchronized and correctly shaped."""
+        world_size = 2
+>       mp.spawn(
+            _test_fsdp_gradient_sync,
+            args=(world_size, compute_dtype),
+            nprocs=world_size,
+            join=True,
+        )
+
+tests/test_fsdp.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:340: in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method="spawn")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:296: in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.multiprocessing.spawn.ProcessContext object at 0x1101f8140>
+timeout = None, grace_period = None
+
+    def join(self, timeout: float | None = None, grace_period: float | None = None):
+        r"""Join one or more processes within spawn context.
+    
+        Attempt to join one or more processes in this spawn context.
+        If one of them exited with a non-zero exit status, this function
+        kills the remaining processes (optionally with a grace period)
+        and raises an exception with the cause of the first process exiting.
+    
+        Returns ``True`` if all processes have been joined successfully,
+        ``False`` if there are more processes that need to be joined.
+    
+        Args:
+            timeout (float): Wait this long (in seconds) before giving up on waiting.
+            grace_period (float): When any processes fail, wait this long (in seconds)
+                for others to shutdown gracefully before terminating them. If they
+                still don't exit, wait another grace period before killing them.
+        """
+        # Ensure this function can be called even when we're done.
+        if len(self.sentinels) == 0:
+            return True
+    
+        # Wait for any process to fail or all of them to succeed.
+        ready = multiprocessing.connection.wait(
+            self.sentinels.keys(),
+            timeout=timeout,
+        )
+    
+        error_index = None
+        for sentinel in ready:
+            index = self.sentinels.pop(sentinel)
+            process = self.processes[index]
+            process.join()
+            if process.exitcode != 0:
+                error_index = index
+                break
+    
+        # Return if there was no error.
+        if error_index is None:
+            # Return whether or not all processes have been joined.
+            return len(self.sentinels) == 0
+        # An error occurred. Clean-up all processes before returning.
+        # First, allow a grace period for processes to shutdown themselves.
+        if grace_period is not None:
+            self._join_procs_with_timeout(grace_period)
+        # Then, terminate processes that are still alive. Try SIGTERM first.
+        for process in self.processes:
+            if process.is_alive():
+                log.warning("Terminating process %s via signal SIGTERM", process.pid)
+                process.terminate()
+    
+        # Try SIGKILL if the process isn't going down after another grace_period.
+        # The reason is related to python signal handling is limited
+        # to main thread and if that is in c/c++ land and stuck it won't
+        # to handle it. We have seen processes getting stuck not handling
+        # SIGTERM for the above reason.
+        self._join_procs_with_timeout(30 if grace_period is None else grace_period)
+        for process in self.processes:
+            if process.is_alive():
+                log.warning(
+                    "Unable to shutdown process %s via SIGTERM , forcefully exiting via SIGKILL",
+                    process.pid,
+                )
+                process.kill()
+            process.join()
+    
+        # The file will only be created if the process crashed.
+        failed_process = self.processes[error_index]
+        if not os.access(self.error_files[error_index], os.R_OK):
+            exitcode = self.processes[error_index].exitcode
+            if exitcode < 0:
+                try:
+                    name = signal.Signals(-exitcode).name
+                except ValueError:
+                    name = f"<Unknown signal {-exitcode}>"
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with signal {name}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                    signal_name=name,
+                )
+            else:
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with exit code {exitcode:d}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                )
+    
+        with open(self.error_files[error_index], "rb") as fh:
+            original_trace = pickle.load(fh)
+        msg = f"\n\n-- Process {error_index:d} terminated with the following error:\n"
+        msg += original_trace
+>       raise ProcessRaisedException(msg, error_index, failed_process.pid)
+E       torch.multiprocessing.spawn.ProcessRaisedException: 
+E       
+E       -- Process 0 terminated with the following error:
+E       Traceback (most recent call last):
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 87, in _wrap
+E           fn(i, *args)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/test_fsdp.py", line 207, in _test_fsdp_gradient_sync
+E           device = _setup_process_group(rank=rank, world_size=world_size, backend="gloo")
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/common.py", line 87, in _setup_process_group
+E           dist.init_process_group(backend, rank=rank, world_size=world_size)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+E           return func(*args, **kwargs)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+E           func_return = func(*args, **kwargs)
+E                         ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1831, in init_process_group
+E           store, rank, world_size = next(rendezvous_iterator)
+E                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 280, in _env_rendezvous_handler
+E           store = _create_c10d_store(
+E                   ^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+E           return TCPStore(
+E                  ^^^^^^^^^
+E       torch.distributed.DistNetworkError: The server socket has failed to bind. port: 12390, useIpv6: 0, code: -1, name: EPERM, message: operation not permitted
+
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:211: ProcessRaisedException
+________________________ test_fsdp_gradient_sync[fp16] _________________________
+
+compute_dtype = torch.float16
+
+    @pytest.mark.filterwarnings("error")
+    @pytest.mark.parametrize("compute_dtype", [None, torch.float16], ids=["fp32", "fp16"])
+    def test_fsdp_gradient_sync(compute_dtype):
+        """Test that gradients are properly synchronized and correctly shaped."""
+        world_size = 2
+>       mp.spawn(
+            _test_fsdp_gradient_sync,
+            args=(world_size, compute_dtype),
+            nprocs=world_size,
+            join=True,
+        )
+
+tests/test_fsdp.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:340: in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method="spawn")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:296: in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.multiprocessing.spawn.ProcessContext object at 0x1101f8c80>
+timeout = None, grace_period = None
+
+    def join(self, timeout: float | None = None, grace_period: float | None = None):
+        r"""Join one or more processes within spawn context.
+    
+        Attempt to join one or more processes in this spawn context.
+        If one of them exited with a non-zero exit status, this function
+        kills the remaining processes (optionally with a grace period)
+        and raises an exception with the cause of the first process exiting.
+    
+        Returns ``True`` if all processes have been joined successfully,
+        ``False`` if there are more processes that need to be joined.
+    
+        Args:
+            timeout (float): Wait this long (in seconds) before giving up on waiting.
+            grace_period (float): When any processes fail, wait this long (in seconds)
+                for others to shutdown gracefully before terminating them. If they
+                still don't exit, wait another grace period before killing them.
+        """
+        # Ensure this function can be called even when we're done.
+        if len(self.sentinels) == 0:
+            return True
+    
+        # Wait for any process to fail or all of them to succeed.
+        ready = multiprocessing.connection.wait(
+            self.sentinels.keys(),
+            timeout=timeout,
+        )
+    
+        error_index = None
+        for sentinel in ready:
+            index = self.sentinels.pop(sentinel)
+            process = self.processes[index]
+            process.join()
+            if process.exitcode != 0:
+                error_index = index
+                break
+    
+        # Return if there was no error.
+        if error_index is None:
+            # Return whether or not all processes have been joined.
+            return len(self.sentinels) == 0
+        # An error occurred. Clean-up all processes before returning.
+        # First, allow a grace period for processes to shutdown themselves.
+        if grace_period is not None:
+            self._join_procs_with_timeout(grace_period)
+        # Then, terminate processes that are still alive. Try SIGTERM first.
+        for process in self.processes:
+            if process.is_alive():
+                log.warning("Terminating process %s via signal SIGTERM", process.pid)
+                process.terminate()
+    
+        # Try SIGKILL if the process isn't going down after another grace_period.
+        # The reason is related to python signal handling is limited
+        # to main thread and if that is in c/c++ land and stuck it won't
+        # to handle it. We have seen processes getting stuck not handling
+        # SIGTERM for the above reason.
+        self._join_procs_with_timeout(30 if grace_period is None else grace_period)
+        for process in self.processes:
+            if process.is_alive():
+                log.warning(
+                    "Unable to shutdown process %s via SIGTERM , forcefully exiting via SIGKILL",
+                    process.pid,
+                )
+                process.kill()
+            process.join()
+    
+        # The file will only be created if the process crashed.
+        failed_process = self.processes[error_index]
+        if not os.access(self.error_files[error_index], os.R_OK):
+            exitcode = self.processes[error_index].exitcode
+            if exitcode < 0:
+                try:
+                    name = signal.Signals(-exitcode).name
+                except ValueError:
+                    name = f"<Unknown signal {-exitcode}>"
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with signal {name}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                    signal_name=name,
+                )
+            else:
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with exit code {exitcode:d}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                )
+    
+        with open(self.error_files[error_index], "rb") as fh:
+            original_trace = pickle.load(fh)
+        msg = f"\n\n-- Process {error_index:d} terminated with the following error:\n"
+        msg += original_trace
+>       raise ProcessRaisedException(msg, error_index, failed_process.pid)
+E       torch.multiprocessing.spawn.ProcessRaisedException: 
+E       
+E       -- Process 0 terminated with the following error:
+E       Traceback (most recent call last):
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py", line 87, in _wrap
+E           fn(i, *args)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/test_fsdp.py", line 207, in _test_fsdp_gradient_sync
+E           device = _setup_process_group(rank=rank, world_size=world_size, backend="gloo")
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/tests/common.py", line 87, in _setup_process_group
+E           dist.init_process_group(backend, rank=rank, world_size=world_size)
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+E           return func(*args, **kwargs)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+E           func_return = func(*args, **kwargs)
+E                         ^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1831, in init_process_group
+E           store, rank, world_size = next(rendezvous_iterator)
+E                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 280, in _env_rendezvous_handler
+E           store = _create_c10d_store(
+E                   ^^^^^^^^^^^^^^^^^^^
+E         File "/Users/xiaofei/01-LLM/project/05CS336/Assignment02/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+E           return TCPStore(
+E                  ^^^^^^^^^
+E       torch.distributed.DistNetworkError: The server socket has failed to bind. port: 12390, useIpv6: 0, code: -1, name: EPERM, message: operation not permitted
+
+.venv/lib/python3.12/site-packages/torch/multiprocessing/spawn.py:211: ProcessRaisedException
+=========================== short test summary info ============================
+FAILED tests/test_fsdp.py::test_fsdp_correctness[fp32] - torch.multiprocessin...
+FAILED tests/test_fsdp.py::test_fsdp_correctness[fp16] - torch.multiprocessin...
+FAILED tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] - torch.multiprocess...
+FAILED tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] - torch.multiprocess...
+============================== 4 failed in 5.95s ===============================

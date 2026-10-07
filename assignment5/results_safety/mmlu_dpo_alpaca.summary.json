@@ -1,0 +1,11 @@
+{
+  "task": "mmlu",
+  "prompt_style": "alpaca",
+  "n": 14042,
+  "elapsed_generate_seconds": 192.94799546152353,
+  "examples_per_second": 72.77608646004393,
+  "n_scored": 14042,
+  "n_correct": 8470,
+  "accuracy": 0.6031904287138584,
+  "n_unparsed": 250
+}

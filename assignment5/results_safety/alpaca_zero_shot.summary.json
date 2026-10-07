@@ -1,0 +1,11 @@
+{
+  "task": "alpaca",
+  "prompt_style": "zero_shot",
+  "n": 805,
+  "elapsed_generate_seconds": 165.18786051683128,
+  "examples_per_second": 4.873239458888549,
+  "n_scored": 0,
+  "n_correct": 0,
+  "accuracy": null,
+  "n_unparsed": 0
+}

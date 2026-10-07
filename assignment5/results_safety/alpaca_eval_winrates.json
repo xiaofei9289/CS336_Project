@@ -1,0 +1,22 @@
+{
+  "llama-3.1-8b-base": {
+    "n_total": 805,
+    "n_wins": 13,
+    "n_wins_base": 792,
+    "n_draws": 0,
+    "win_rate": 1.6149068322981366,
+    "standard_error": 0.4445395056466973,
+    "length_controlled_winrate": 1.9054678687512039,
+    "lc_standard_error": 0.09658969163117173
+  },
+  "llama-3.1-8b-sft": {
+    "n_total": 805,
+    "n_wins": 20,
+    "n_wins_base": 784,
+    "n_draws": 1,
+    "win_rate": 2.546583850931677,
+    "standard_error": 0.5520965307401061,
+    "length_controlled_winrate": 5.723270530627793,
+    "lc_standard_error": 0.19360143016699408
+  }
+}

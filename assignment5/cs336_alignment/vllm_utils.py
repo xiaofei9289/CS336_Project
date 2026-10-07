@@ -8,6 +8,7 @@ import logging
 import os
 import signal
 import subprocess
+import sys
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -124,11 +125,14 @@ def start_server(
     gpu_memory_utilization: float = 0.9,
 ) -> subprocess.Popen:
     env = os.environ.copy()
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
     env["CUDA_VISIBLE_DEVICES"] = str(gpu)
     env["VLLM_SERVER_DEV_MODE"] = "1"
     env["VLLM_LOGGING_LEVEL"] = logging_level
+    vllm_bin = os.path.join(venv_bin, "vllm")
     command = [
-        "vllm",
+        vllm_bin if os.path.isfile(vllm_bin) else "vllm",
         "serve",
         model_id,
         "--host",
@@ -202,6 +206,8 @@ def generate_completions(
             "seed": sampling_params["seed"],
             "return_token_ids": True,
         }
+        if "top_p" in sampling_params:
+            payload["top_p"] = sampling_params["top_p"]
         if sampling_params.get("stop") is not None:
             payload["stop"] = sampling_params["stop"]
             payload["include_stop_str_in_output"] = sampling_params.get("include_stop_str_in_output", False)

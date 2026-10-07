@@ -1,0 +1,11 @@
+{
+  "task": "sst",
+  "prompt_style": "alpaca",
+  "n": 100,
+  "elapsed_generate_seconds": 7.868481654673815,
+  "examples_per_second": 12.7089322170054,
+  "n_scored": 0,
+  "n_correct": 0,
+  "accuracy": null,
+  "n_unparsed": 0
+}

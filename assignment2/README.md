@@ -1,65 +1,63 @@
-# CS336 Spring 2026 Assignment 2: Systems
+# Distributed Training, Sharding, and Triton Attention
 
-For a full description of the assignment, see the assignment handout at
-[cs336_assignment2_systems.pdf](./cs336_assignment2_systems.pdf)
+Custom DDP, FSDP-style sharding, optimizer-state sharding, and a Triton attention forward and backward kernel. The assignment scaffolding and tests come from Stanford CS336. The implementations and the saved RTX PRO 6000 measurements are mine.
 
-If you see any issues with the assignment handout or code, please feel free to
-raise a GitHub issue or open a pull request with a fix.
+The two headline rows were checked against `results/rtxpro6000_naive_ddp.txt`, `results/rtxpro6000_overlap_ddp.txt`, and `results/rtxpro6000_optimizer_sharding_accounting.txt`. These benchmarks were not rerun for this page. The same numbers are in the repository root `results/systems_results.csv`.
+
+## Problem
+
+Replace stock distributed-training pieces and measure what changes:
+
+1. Average gradients with a custom DDP wrapper, including a version that overlaps per-parameter communication with backward.
+2. Shard parameters and optimizer state so rank 0 does not hold a full AdamW state.
+3. Implement attention forward and backward in Triton.
+
+## Personal contribution
+
+- `cs336_systems/ddp.py`: naive per-parameter all-reduce and overlap with backward.
+- `cs336_systems/fsdp.py`: parameter sharding across the forward and backward pass.
+- `cs336_systems/optimizer_state_sharding.py`: AdamW state sharded across ranks.
+- `cs336_systems/flash_attention.py` and `flash_attention_triton_backward.py`: Triton attention forward and backward.
+
+These files are the completed implementations. The course `cs336-basics` package in this directory is the staff language-model code used as a starting point.
+
+## Workflow
+
+```mermaid
+flowchart TD
+  model["xl Transformer"]
+  ddp["benchmark_ddp.py"]
+  shard["benchmark_optimizer_sharding.py"]
+  attn["flash_attention_triton_backward.py"]
+  logs["results/rtxpro6000_*.txt"]
+  model --> ddp --> logs
+  model --> shard --> logs
+  model --> attn
+```
+
+## Key results
+
+| Result | Model | Baseline | Dataset | Seeds | GPU | Evaluation |
+|---|---|---|---|---|---|---|
+| DDP overlap, **1,225.548 → 1,022.0085 ms/step (−16.6%)** | Custom overlap DDP. xl shape in the log: vocab 10,000, `d_model=2560`, 32 layers, 32 heads, `d_ff=10240`, context 512, about 3.406B parameters. | Custom naive DDP in the same script. This is not native PyTorch DDP. Naive grad-sync time is 576.8879 ms/step, 47.07% of the step. | Synthetic. Loss is `logits.mean()`. | One timing run. Warmup 5, measure 10. | 2× RTX PRO 6000 Blackwell Server Edition. PyTorch 2.11.0+cu128, NCCL, conda base. | `python cs336_systems/benchmark_ddp.py --mode naive --world_size 2 --backend nccl` and the same command with `--mode overlap_params`. Global batch 4, local batch 2. A step is zero_grad, forward, backward, per-parameter all-reduce, and AdamW. Overlap launches communication during backward. |
+| Optimizer-state sharding, rank-0 cumulative peak **63.756 → 44.850 GiB (−29.7%)** | Sharded AdamW state on the same xl shape. | Unsharded AdamW in a separate microbenchmark. | Synthetic forward and backward. Gradients are not all-reduced. | One accounting run. | Same 2× RTX PRO 6000 Blackwell Server Edition, PyTorch 2.11.0+cu128, NCCL. | `python -m cs336_systems.benchmark_optimizer_sharding`. Context 512, global batch 4, local batch 2. Mean step time rises **639.069 → 827.633 ms (+29.5%)**. |
+
+The sharding run does not all-reduce gradients, so the memory drop does not by itself show the same convergence in synchronized training. Selected attention tests passing does not cover every dtype, shape, and causal branch.
+
+## Code entry points
+
+| Component | Path |
+|---|---|
+| Naive and overlap DDP | `cs336_systems/ddp.py` |
+| DDP benchmark | `cs336_systems/benchmark_ddp.py` |
+| FSDP-style sharding | `cs336_systems/fsdp.py` |
+| Optimizer-state sharding | `cs336_systems/optimizer_state_sharding.py` |
+| Sharding benchmark | `cs336_systems/benchmark_optimizer_sharding.py` |
+| Triton attention | `cs336_systems/flash_attention.py`, `cs336_systems/flash_attention_triton_backward.py` |
+| Saved DDP logs | `results/rtxpro6000_naive_ddp.txt`, `results/rtxpro6000_overlap_ddp.txt` |
+| Saved sharding log | `results/rtxpro6000_optimizer_sharding_accounting.txt` |
+| Handout | `cs336_assignment2_systems.pdf` |
 
 ## Setup
 
-This directory is organized as follows:
-
-- [`./cs336-basics`](./cs336-basics): directory containing a module
-  `cs336_basics` and its associated `pyproject.toml`. This module contains the staff 
-  implementation of the language model from assignment 1. If you want to use your own 
-  implementation, you can replace this directory with your own implementation.
-- [`./cs336_systems`](./cs336_systems): This folder is basically empty! This is the
-  module where you will implement your optimized Transformer language model. 
-  Feel free to take whatever code you need from assignment 1 (in `cs336-basics`) and copy it 
-  over as a starting point. In addition, you will implement distributed training and
-  optimization in this module.
-
-Visually, it should look something like:
-
-``` sh
-.
-├── cs336_basics  # A python module named cs336_basics
-│   ├── __init__.py
-│   └── ... other files in the cs336_basics module, taken from assignment 1 ...
-├── cs336_systems  # TODO(you): code that you'll write for assignment 2 
-│   ├── __init__.py
-│   └── ... TODO(you): any other files or folders you need for assignment 2 ...
-├── README.md
-├── pyproject.toml
-└── ... TODO(you): other files or folders you need for assignment 2 ...
-```
-
-If you would like to use your own implementation of assignment 1, replace the `cs336-basics`
-directory with your own implementation, or edit the outer `pyproject.toml` file to point to your
-own implementation.
-
-0. We use `uv` to manage dependencies. You can verify that the code from the `cs336-basics`
-package is accessible by running:
-
-```sh
-$ uv run python
-Using CPython 3.13.13
-Creating virtual environment at: /path/to/uv/env/dir
-      Built cs336-systems @ file:///path/to/systems/dir
-      Built cs336-basics @ file:///path/to/basics/dir
-Installed 78 packages in 168ms
-Python 3.13.13 (main, Apr  7 2026, 20:49:46) [Clang 22.1.1 ] on linux
-Type "help", "copyright", "credits" or "license" for more information.
->>> import cs336_basics
-...
-```
-
-`uv run` installs dependencies automatically as dictated in the `pyproject.toml` file.
-
-## Submitting
-
-To submit, run `./test_and_make_submission.sh` . This script will install your
-code's dependencies, run tests, and create a gzipped tarball with the output. We
-should be able to unzip your submitted tarball and run
-`./test_and_make_submission.sh` to verify your test results.
+Dependencies are managed with `uv`. From this directory, `uv run python` installs the environment and can import `cs336_basics`. Run a benchmark with the commands in the table above, on two GPUs with NCCL. To run the course tests and pack a submission tarball, use `./test_and_make_submission.sh`.

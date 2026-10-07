@@ -1,0 +1,7 @@
+evaluation,prompt_style,scored_questions,correct_answers,accuracy
+mmlu_zero_shot,zero_shot,14042,8153,0.5806152969662441
+mmlu_sft_alpaca,alpaca,14042,8598,0.6123059393248825
+mmlu_dpo_alpaca,alpaca,14042,8470,0.6031904287138584
+gsm8k_zero_shot,zero_shot,1319,208,0.15769522365428354
+gsm8k_sft_alpaca,alpaca,1319,416,0.3153904473085671
+gsm8k_dpo_alpaca,alpaca,1319,392,0.2971948445792267

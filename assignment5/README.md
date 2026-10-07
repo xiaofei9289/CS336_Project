@@ -24,7 +24,7 @@ uv sync
 uv run pytest tests/test_grpo.py
 ```
 
-Initially, all tests should fail with `NotImplementedError`s.
-To connect your implementation to the tests, complete the
-functions in [./tests/adapters.py](./tests/adapters.py).
+`tests/adapters.py` calls the completed implementations in `cs336_alignment/`.
+Training entry points are `scripts/train_grpo.py`, `scripts/train_grpo_variants.py`, `scripts/train_sft.py`, and `scripts/train_dpo.py`.
+The repository root README records the saved results and which steps have been rerun.
 

@@ -1,0 +1,4 @@
+experiment,metric,baseline,modified,relative_change,scope
+DDP communication overlap,mean_step_time_ms,1225.548,1022.0085,-0.16608039831977206,2 RTX PRO 6000; xl; context512; global_batch4; synthetic_logits_mean_loss
+Optimizer-state sharding,rank0_cumulative_peak_allocated_GiB,63.756,44.85,-0.29653679653679654,2 RTX PRO 6000; xl; no_gradient_all_reduce; separate_microbenchmark
+Optimizer-state sharding,mean_step_time_ms,639.069,827.633,0.29506047077858577,2 RTX PRO 6000; xl; no_gradient_all_reduce; separate_microbenchmark

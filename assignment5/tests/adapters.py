@@ -5,8 +5,21 @@ from typing import Any, Callable, Literal
 
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
+
+from cs336_alignment.dpo import per_instance_dpo_loss
+from cs336_alignment.grpo import (
+    aggregate_loss_across_microbatch,
+    compute_group_normalized_rewards,
+    compute_policy_gradient_loss,
+    compute_rollout_rewards,
+    get_response_log_probs,
+    grpo_train_step,
+    tokenize_prompt_and_output,
+)
+from cs336_alignment.safety_metrics import parse_gsm8k_response, parse_mmlu_response
+from cs336_alignment.sft_data import PackedSFTDataset
 
 
 
@@ -46,7 +59,7 @@ def run_tokenize_prompt_and_output(
                 with labels, with value 1 where the corresponding label token
                 is part of the response and 0 otherwise.
     """
-    raise NotImplementedError
+    return tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer)
 
 
 def run_get_response_log_probs(
@@ -82,7 +95,9 @@ def run_get_response_log_probs(
                 entropy for each position (present only if
                 return_token_entropy=True).
     """
-    raise NotImplementedError
+    return get_response_log_probs(
+        model, input_ids, labels, return_token_entropy
+    )
 
 
 def run_compute_rollout_rewards(
@@ -114,7 +129,9 @@ def run_compute_rollout_rewards(
                 Reward statistics to log. At minimum, include the mean total
                 and format rewards over the rollout batch.
     """
-    raise NotImplementedError
+    return compute_rollout_rewards(
+        reward_fn, rollout_responses, repeated_ground_truths
+    )
 
 
 def run_compute_group_normalized_rewards(
@@ -153,7 +170,13 @@ def run_compute_group_normalized_rewards(
                 your choice of other statistics to log (e.g. mean, std, max/min
                 of rewards).
     """
-    raise NotImplementedError
+    return compute_group_normalized_rewards(
+        raw_rewards,
+        group_size,
+        baseline,
+        advantage_eps,
+        advantage_normalizer,
+    )
 
 
 def run_compute_policy_gradient_loss(
@@ -200,7 +223,14 @@ def run_compute_policy_gradient_loss(
                 Statistics from the underlying loss call, such as
                 clip-fraction components.
     """
-    raise NotImplementedError
+    return compute_policy_gradient_loss(
+        raw_rewards_or_advantages,
+        policy_log_probs,
+        importance_reweighting_method,
+        old_log_probs,
+        cliprange,
+        response_mask,
+    )
 
 
 def run_aggregate_loss_across_microbatch(
@@ -232,7 +262,12 @@ def run_aggregate_loss_across_microbatch(
             A scalar containing the average loss. Make sure you can later call
             backward on this loss.
     """
-    raise NotImplementedError
+    return aggregate_loss_across_microbatch(
+        per_token_policy_gradient_loss,
+        mask,
+        loss_normalization,
+        normalization_constant,
+    )
 
 
 def run_grpo_train_step(
@@ -321,7 +356,26 @@ def run_grpo_train_step(
                 Dict with metadata from the underlying loss call, gradient norm
                 before clipping, and any other statistics you might want to log.
     """
-    raise NotImplementedError
+    return grpo_train_step(
+        model,
+        tokenizer,
+        optimizer,
+        gradient_accumulation_steps,
+        max_grad_norm,
+        reward_fn,
+        repeated_prompts,
+        rollout_responses,
+        repeated_ground_truths,
+        group_size,
+        baseline,
+        advantage_eps,
+        advantage_normalizer,
+        importance_reweighting_method,
+        old_log_probs,
+        cliprange,
+        loss_normalization,
+        normalization_constant,
+    )
 
 
 """
@@ -357,7 +411,7 @@ def get_packed_sft_dataset(
         "input_ids" contains the token IDs for the language modeling inputs, and "labels" contains
         the token IDs for the language modeling labels.
     """
-    raise NotImplementedError
+    return PackedSFTDataset(tokenizer, dataset_path, seq_length, shuffle)
 
 
 def run_iterate_batches(
@@ -380,7 +434,7 @@ def run_iterate_batches(
     Returns:
         Iterable over batches, where each batch has size `batch_size`.
     """
-    raise NotImplementedError
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 def run_parse_mmlu_response(
@@ -406,7 +460,8 @@ def run_parse_mmlu_response(
         str (one of "A", "B", "C", or "D") if the model output can be parsed into a prediction,
         else None.
     """
-    raise NotImplementedError
+    del mmlu_example
+    return parse_mmlu_response(model_output)
 
 
 def run_parse_gsm8k_response(
@@ -423,7 +478,7 @@ def run_parse_gsm8k_response(
         str with the predicted numeric answer if the model output can be parsed into a prediction,
         else None.
     """
-    raise NotImplementedError
+    return parse_gsm8k_response(model_output)
 
 
 def run_compute_per_instance_dpo_loss(
@@ -458,4 +513,13 @@ def run_compute_per_instance_dpo_loss(
     Returns:
         torch.Tensor with the DPO loss for this example.
     """
-    raise NotImplementedError
+    return per_instance_dpo_loss(
+        lm,
+        lm_ref,
+        tokenizer,
+        beta,
+        prompt,
+        response_chosen,
+        response_rejected,
+    )
+

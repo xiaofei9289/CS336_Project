@@ -1,0 +1,11 @@
+{
+  "task": "mmlu",
+  "prompt_style": "zero_shot",
+  "n": 10,
+  "elapsed_generate_seconds": 38.77704562805593,
+  "examples_per_second": 0.2578845251883968,
+  "n_scored": 10,
+  "n_correct": 3,
+  "accuracy": 0.3,
+  "n_unparsed": 0
+}

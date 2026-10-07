@@ -1,0 +1,11 @@
+{
+  "task": "gsm8k",
+  "prompt_style": "zero_shot",
+  "n": 1319,
+  "elapsed_generate_seconds": 189.4655831605196,
+  "examples_per_second": 6.961686539568048,
+  "n_scored": 1319,
+  "n_correct": 208,
+  "accuracy": 0.15769522365428354,
+  "n_unparsed": 6
+}

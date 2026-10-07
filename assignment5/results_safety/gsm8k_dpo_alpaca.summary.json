@@ -1,0 +1,11 @@
+{
+  "task": "gsm8k",
+  "prompt_style": "alpaca",
+  "n": 1319,
+  "elapsed_generate_seconds": 130.9786732122302,
+  "examples_per_second": 10.070341740771562,
+  "n_scored": 1319,
+  "n_correct": 392,
+  "accuracy": 0.2971948445792267,
+  "n_unparsed": 1
+}

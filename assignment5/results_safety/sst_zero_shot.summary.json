@@ -1,0 +1,11 @@
+{
+  "task": "sst",
+  "prompt_style": "zero_shot",
+  "n": 100,
+  "elapsed_generate_seconds": 20.002710089087486,
+  "examples_per_second": 4.999322569522976,
+  "n_scored": 0,
+  "n_correct": 0,
+  "accuracy": null,
+  "n_unparsed": 0
+}

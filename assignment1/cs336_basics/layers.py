@@ -15,7 +15,7 @@ class Embedding(nn.Module):
     ):
         super().__init__()
 
-        # 每一行对应一个 token 的向量
+        # Each row is one token's vector
         # shape: (vocab_size, d_model)
         self.weight = nn.Parameter(
             torch.empty(
@@ -26,8 +26,8 @@ class Embedding(nn.Module):
             )
         )
 
-        # Embedding 初始化：
-        # N(0, 1)，截断到 [-3, 3]
+        # Embedding initialization:
+        # N(0, 1), truncated to [-3, 3]
         nn.init.trunc_normal_(
             self.weight,
             mean=0.0,
@@ -40,7 +40,7 @@ class Embedding(nn.Module):
         self,
         token_ids: Int[Tensor, "..."],
     ) -> Float[Tensor, "... d_model"]:
-        # token_ids 中的每个整数都作为 weight 的行索引
+        # Each integer in token_ids indexes a row of weight
         return self.weight[token_ids]
 
 
@@ -68,7 +68,7 @@ class Linear(nn.Module):
             2.0 / (in_features + out_features)
         )
 
-        # 从 N(0, σ²) 中采样，并截断到 [-3σ, 3σ]
+        # Sample from N(0, σ²) and truncate to [-3σ, 3σ]
         nn.init.trunc_normal_(
             self.weight,
             mean=0.0,
@@ -95,8 +95,8 @@ class RMSNorm(nn.Module):
         self.d_model = d_model
         self.eps = eps
 
-        # gain 参数，形状为 (d_model,)
-        # RMSNorm 的 gain 初始化为 1
+        # Gain parameter, shape (d_model,)
+        # RMSNorm gain is initialized to 1
         self.weight = nn.Parameter(
             torch.ones(
                 d_model,
@@ -110,13 +110,13 @@ class RMSNorm(nn.Module):
         x: Float[Tensor, "... d_model"],
     ) -> Float[Tensor, "... d_model"]:
 
-        # 保存原始 dtype，例如 BF16
+        # Save the original dtype, for example BF16
         input_dtype = x.dtype
 
-        # 为提高数值稳定性，在 FP32 中计算归一化
+        # Compute the normalization in FP32 for numerical stability
         x_float = x.to(torch.float32)
 
-        # 对最后一维计算：
+        # Over the last dimension:
         # 1 / sqrt(mean(x²) + eps)
         inverse_rms = torch.rsqrt(
             x_float.pow(2).mean(
@@ -130,10 +130,10 @@ class RMSNorm(nn.Module):
         normalized = x_float * inverse_rms
 
         # weight: (d_model,)
-        # 自动广播到所有前置维度
+        # Broadcasts automatically over all leading dimensions
         output = normalized * self.weight
 
-        # 转回输入的原始 dtype
+        # Cast back to the input dtype
         return output.to(input_dtype)
 
 def silu(
@@ -193,7 +193,7 @@ class SwiGLU(nn.Module):
 
         return self.w2(gate * value)
 
-# ===== [新增：SiLU FFN] 开始 =====
+# ===== [added: SiLU FFN] start =====
 class SiLUFFN(nn.Module):
     def __init__(
         self,
@@ -204,8 +204,8 @@ class SiLUFFN(nn.Module):
     ):
         super().__init__()
 
-        # 升维：(..., d_model) -> (..., d_ff)
-        # d_ff 由外部传入，不写死为 2048。
+        # Up-project: (..., d_model) -> (..., d_ff)
+        # d_ff is passed in; it is not hard-coded to 2048.
         self.w1 = Linear(
             in_features=d_model,
             out_features=d_ff,
@@ -213,7 +213,7 @@ class SiLUFFN(nn.Module):
             dtype=dtype,
         )
 
-        # 降维：(..., d_ff) -> (..., d_model)
+        # Down-project: (..., d_ff) -> (..., d_model)
         self.w2 = Linear(
             in_features=d_ff,
             out_features=d_model,
@@ -225,10 +225,10 @@ class SiLUFFN(nn.Module):
         self,
         x: Float[Tensor, "... d_model"],
     ) -> Float[Tensor, "... d_model"]:
-        # 升维 -> SiLU -> 降维
-        # 没有 w3，也没有两个分支之间的门控乘法。
+        # Up-project -> SiLU -> down-project
+        # There is no w3 and no gating product between two branches.
         return self.w2(silu(self.w1(x)))
-# ===== [新增：SiLU FFN] 结束 =====
+# ===== [added: SiLU FFN] end =====
 
 
 def softmax(
@@ -236,35 +236,35 @@ def softmax(
     dim: int,
     ) -> Float[Tensor, "..."]:
     """
-    在指定的 dim 维度上计算数值稳定的 Softmax。
+    Numerically stable softmax along the given dimension.
 
     Softmax(x_i) = exp(x_i - max(x))
                    -----------------
                    sum(exp(x_j - max(x)))
     """
 
-    # 1. 在指定维度上找到最大值
-    # keepdim=True 保留这一维，方便后续广播
+    # 1. Max along the given dimension
+    # keepdim=True keeps that dimension so later ops can broadcast
     max_value = torch.max(
         in_features,
         dim=dim,
         keepdim=True,
     ).values
 
-    # 2. 所有元素先减去最大值，防止 exp 溢出
+    # 2. Subtract the max from every element to avoid exp overflow
     shifted_features = in_features - max_value
 
-    # 3. 对平移后的数计算指数
+    # 3. Exponentiate the shifted values
     exp_features = torch.exp(shifted_features)
 
-    # 4. 在同一个维度上计算指数和
+    # 4. Sum the exponentials along the same dimension
     exp_sum = torch.sum(
         exp_features,
         dim=dim,
         keepdim=True,
     )
 
-    # 5. 每个指数除以指数总和
+    # 5. Divide each exponential by the sum
     return exp_features / exp_sum
 
 #--------------------------------
@@ -275,21 +275,21 @@ def cross_entropy(
     targets: Int[Tensor, "batch"],
 ) -> Float[Tensor, ""]:
     """
-    计算多分类交叉熵损失。
+    Compute the multi-class cross-entropy loss.
 
     inputs:
-        未经过 softmax 的 logits
-        形状为 (batch, vocab_size)
+        Logits before softmax
+        Shape (batch, vocab_size)
 
     targets:
-        每个样本的正确类别下标
-        形状为 (batch,)
+        Correct class index for each example
+        Shape (batch,)
 
     return:
-        batch 中所有样本损失的平均值，是一个标量
+        Mean loss over the batch, a scalar
     """
 
-    # 1. 每一行减去该行的最大值，防止 exp 溢出
+    # 1. Subtract each row's max to avoid exp overflow
     max_logits = inputs.max(
         dim=-1,
         keepdim=True,
@@ -297,27 +297,27 @@ def cross_entropy(
 
     shifted_logits = inputs - max_logits
 
-    # 2. 取出每个样本对应正确类别的 logit
+    # 2. Gather the logit of the correct class for each example
     #
     # targets.unsqueeze(-1):
     # (batch,) -> (batch, 1)
     #
-    # gather 后：
+    # After gather:
     # (batch, 1) -> squeeze -> (batch,)
     target_logits = shifted_logits.gather(
         dim=-1,
         index=targets.unsqueeze(-1),
     ).squeeze(-1)
 
-    # 3. 计算每一行的 log(sum(exp(logits)))
+    # 3. log(sum(exp(logits))) for each row
     log_sum_exp = torch.log(
         torch.exp(shifted_logits).sum(dim=-1)
     )
 
-    # 4. 每个样本的交叉熵
+    # 4. Per-example cross-entropy
     losses = -target_logits + log_sum_exp
 
-    # 5. 对 batch 取平均，返回标量
+    # 5. Average over the batch and return a scalar
     return losses.mean()
 
 #--------------------------------
@@ -332,27 +332,27 @@ def gradient_clipping(
     max_l2_norm: float,
 ) -> None:
     """
-    按所有参数梯度的全局 L2 范数进行裁剪。
+    Clip gradients by their global L2 norm across all parameters.
 
     parameters:
-        模型参数
+        Model parameters
 
     max_l2_norm:
-        允许的最大全局梯度 L2 范数
+        Maximum allowed global gradient L2 norm
     """
 
-    # 1. 只保留存在梯度的参数
+    # 1. Keep only parameters that have a gradient
     grads = [
         parameter.grad
         for parameter in parameters
         if parameter.grad is not None
     ]
 
-    # 没有任何梯度时，不需要处理
+    # Nothing to do when there are no gradients
     if len(grads) == 0:
         return
 
-    # 2. 计算所有梯度合在一起的全局 L2 范数
+    # 2. Global L2 norm of all gradients together
     #
     # total_norm =
     # sqrt(
@@ -367,14 +367,14 @@ def gradient_clipping(
 
     total_norm = torch.sqrt(total_squared_norm)
 
-    # 3. 总范数没有超过上限时，保持梯度不变
+    # 3. Leave gradients unchanged when the total norm is within the limit
     if total_norm <= max_l2_norm:
         return
 
-    # 4. 所有梯度共用同一个缩放系数
+    # 4. Every gradient shares the same scale factor
     scale = max_l2_norm / (total_norm + 1e-6)
 
-    # 5. 原地修改每个参数原有的 grad
+    # 5. Scale each parameter's existing grad in place
     with torch.no_grad():
         for grad in grads:
             grad.mul_(scale)

@@ -27,12 +27,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    # Train：保存 CSV 中每一行的数据。
+    # Train: keep every row from the CSV.
     iterations: list[int] = []
     elapsed_seconds: list[float] = []
     train_losses: list[float] = []
 
-    # Val：只保存 validation_loss 非空的行及其对应横坐标。
+    # Val: keep only rows with a non-empty validation_loss, and their x coordinates.
     val_iterations: list[int] = []
     val_elapsed_seconds: list[float] = []
     val_losses: list[float] = []
@@ -46,14 +46,14 @@ def main() -> None:
             elapsed_seconds.append(elapsed)
             train_losses.append(float(row["train_loss"]))
 
-            # 空字符串直接跳过，不转换为 0。
+            # Skip empty strings instead of converting them to 0.
             validation_loss = row["validation_loss"].strip()
             if validation_loss:
                 val_iterations.append(iteration)
                 val_elapsed_seconds.append(elapsed)
                 val_losses.append(float(validation_loss))
 
-    # 默认输出到 CSV 所在目录。
+    # By default, write next to the CSV.
     step_output = (
         args.output
         if args.output is not None
@@ -61,7 +61,7 @@ def main() -> None:
     )
     wallclock_output = args.log.parent / "training_curve_wallclock.png"
 
-    # 两张图共用画图逻辑，只切换横坐标和输出路径。
+    # Both figures share the plotting logic; only the x-axis and output path change.
     plots = [
         (
             iterations,

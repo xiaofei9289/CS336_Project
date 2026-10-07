@@ -5,41 +5,41 @@ from .bpe import GPT2_PRETOKEN_PATTERN
 
 class Tokenizer:
 
-    # 1. 初始化构造函数
+    # 1. Initialize the constructor
     def __init__(
         self, 
         vocab: dict[int, bytes],
         merges: list[tuple[bytes,bytes]],
         special_tokens: list[str] | None = None,
         ):
-        # 1. 复制可变输入，避免类外修改影响 Tokenizer。
+        # 1. Copy mutable inputs so changes outside the class do not affect the Tokenizer.
         self.vocab = dict(vocab)
         self.merges = list(merges)
         self.special_tokens = list(special_tokens or []) 
 
-        # 2. 创建反向词表：token bytes -> token id
+        # 2. Build the inverse vocabulary: token bytes -> token id
         self.inverse_vocab = self._build_inverse_vocab()
 
-        # 3. 创建merge 优先级
+        # 3. Build merge ranks
         self.merge_ranks = self._build_merge_ranks()
         
-        # 4. 保存特殊token对应的token id
+        # 4. Store the token id of each special token
         self.special_token_ids: dict[str, int] = {}
 
         for special_token in self.special_tokens:
-            # 将特殊 token 字符串转换为 UTF-8 bytes
+            # Convert the special-token string to UTF-8 bytes
             token_bytes = special_token.encode("utf-8")
 
-            # 检查特殊 token 是否存在于 vocab
+            # Check that the special token exists in the vocab
             if token_bytes not in self.inverse_vocab:
                 raise ValueError(
                     f"special token {special_token!r} is not in vocab"
                 )
 
-            # 保存两种特殊 token 映射
+            # Store the special-token mapping
             self.special_token_ids[special_token] = self.inverse_vocab[token_bytes]
         
-        # 编译一次即可，避免每次调用 encode 都重新创建正则表达式。
+        # Compile once so encode does not rebuild the regex on every call.
         unique_special_tokens = sorted(
             set(self.special_tokens),
             key=len,
@@ -61,29 +61,29 @@ class Tokenizer:
 
 
 
-    # ---------- 公开接口 ----------
-    # 1. 实现编码encode函数
+    # ---------- Public API ----------
+    # 1. encode
     def encode(self, text: str) -> list[int]:
         """
-        将任意原始文本编码为 token ID 列表。
+        Encode arbitrary raw text into a list of token IDs.
 
-        流程：
-        1. 保留特殊 token 地切分原始文本；
-        2. 特殊 token 直接映射为单个 ID；
-        3. 普通文本进行 GPT-2 预分词；
-        4. 每个 pre-token 转为初始 byte ID；
-        5. 每个 pre-token 内执行 BPE merges；
-        6. 拼接所有结果。
+        Steps:
+        1. Split the raw text while keeping special tokens;
+        2. Map each special token directly to a single ID;
+        3. Pre-tokenize ordinary text with the GPT-2 pattern;
+        4. Turn each pre-token into initial byte IDs;
+        5. Apply BPE merges inside each pre-token;
+        6. Concatenate all results.
         """
 
         final_token_ids: list[int] = []
 
-        # 1. 分离普通文本和特殊 token
+        # 1. Separate ordinary text from special tokens
         segments = self._split_on_special_tokens(text)
 
         for segment, is_special in segments:
 
-            # 2. 特殊 token 直接输出一个 ID
+            # 2. A special token emits a single ID
             if is_special:
                 final_token_ids.append(self.special_token_ids[segment])
             else:
@@ -91,35 +91,35 @@ class Tokenizer:
 
         return final_token_ids
 
-    # 2. 实现逐段编码encode_iterable函数
+    # 2. encode_iterable, encoding one chunk at a time
     def encode_iterable(
         self,
         iterable: Iterable[str],
     ) -> Iterator[int]:
-        """逐段编码字符串 iterable，并依次产出 token ID。"""
+        """Encode a string iterable chunk by chunk and yield token IDs."""
         for chunk in iterable:
             if chunk:
                 yield from self.encode(chunk)
 
-    # 3. 实现解码decode函数
+    # 3. decode
     def decode(self, tokens: list[int]) -> str:
-        #  1.1 创建byte缓冲区
+        # 1.1 Create a byte buffer
         decode_bytes = bytearray()
-        # 1.2 遍历每一个token id
+        # 1.2 Walk every token id
         for token_id in tokens:
-            # 1.21 检查token id是否存在
+            # 1.21 Check that the token id exists
             if token_id not in self.vocab:
                 raise ValueError(f"Unkown token id: {token_id}")
-            # 1.22 去除并追加token对应的bytes
+            # 1.22 Look up and append the token's bytes
             decode_bytes.extend(self.vocab[token_id])
-        # 1.3 循环结束后，将byte缓冲区转换为不可变的字符串
+        # 1.3 After the loop, turn the byte buffer into a string
         decoded_str = decode_bytes.decode("utf-8", errors="replace")
         return decoded_str
 
-# ---------- 私有初始化辅助函数 ----------
+# ---------- Private initialization helpers ----------
 
     def _build_inverse_vocab(self) -> dict[bytes, int]:
-        """创建 ``token bytes -> token ID`` 的反向词表。"""
+        """Build the inverse vocabulary, ``token bytes -> token ID``."""
         inverse_vocab: dict[bytes, int] = {}
 
         for token_id, token_bytes in self.vocab.items():
@@ -133,7 +133,7 @@ class Tokenizer:
         return inverse_vocab
 
     def _build_merge_ranks(self) -> dict[tuple[bytes, bytes], int]:
-        """把 merge 列表转换为 pair 到优先级的映射。"""
+        """Turn the merge list into a map from pair to rank."""
         merge_ranks: dict[tuple[bytes, bytes], int] = {}
 
         for rank, pair in enumerate(self.merges):
@@ -145,49 +145,49 @@ class Tokenizer:
 
         return merge_ranks
 
-# ---------- 私有编码辅助函数 ----------
-# 1. 保留特殊token的切分函数
+# ---------- Private encoding helpers ----------
+# 1. Split while keeping special tokens
     def _split_on_special_tokens(
         self, 
         text: str,
         ) -> list[tuple[str, bool]]:
         """
-        输入一段原始文本后：
-        1. 找出其中特殊的token
-        2. 把普通文本和特殊token分开
-        3. 特殊token原样保留
-        4. 返回带类型标记的片段列表
+        Given a piece of raw text:
+        1. Find the special tokens in it
+        2. Separate ordinary text from special tokens
+        3. Keep special tokens unchanged
+        4. Return a list of typed segments
         """
-        # 1. 如果文本为空，则返回空列表
+        # 1. An empty string yields an empty list
         if not text:
             return []
-        # 2. 如果当前tokenizer没有适配任何特殊token，直接把其当成普通文本片段返回
+        # 2. With no special tokens, return the whole string as ordinary text
         if not self.special_tokens:
             return [(text, False)]
-        # 3. 创建结果列表，这是一个空列表，用来保存最终的切分结果
+        # 3. Empty result list that will hold the final segments
         segments: list[tuple[str, bool]] = []
-        # 4. 创建一个指针，用来遍历文本
+        # 4. Pointer used to walk the text
         pointer = 0
-        # 5. 遍历文本，查找每一个特殊token
+        # 5. Walk the text and find every special token
         for match in self._special_token_pattern.finditer(text):
-            # 5.1 如果找到的特殊token位置比指针位置大，说明中间有普通文本
+            # 5.1 A gap before the match is ordinary text
             if match.start() > pointer:
                 normal_text = text[pointer:match.start()]
                 segments.append((normal_text, False))
-            # 5.2 如果找到的特殊token位置和指针位置相同，说明这个特殊token就是开头
+            # 5.2 A match at the pointer means the text starts with this special token
             special_token =match.group(0)
             segments.append((special_token, True))
-            # 5.3 更新指针位置
+            # 5.3 Advance the pointer
             pointer = match.end()
-        # 6. 处理文本末尾的普通文本
+        # 6. Ordinary text after the last special token
         if pointer < len(text):
             normal_text = text[pointer:]
             segments.append((normal_text, False))
         return segments
 
-    # 2. 实现编码普通文本函数
+    # 2. Encode ordinary text
     def _encode_ordinary_text(self, text: str) -> list[int]:
-        """对不含特殊 token 的文本执行预分词和 BPE。"""
+        """Pre-tokenize and apply BPE to text that contains no special tokens."""
         pre_tokens = [
             match.group(0)
             for match in GPT2_PRETOKEN_PATTERN.finditer(text)
@@ -205,9 +205,9 @@ class Tokenizer:
 
         return token_ids
 
-    # 3. 实现编码初始单 byte token ID函数
+    # 3. Encode the initial single-byte token IDs
     def _encode_initial_bytes(self, pre_token: str) -> list[int]:
-        """将一个 pre-token 转换为初始单 byte token ID。"""
+        """Turn one pre-token into its initial single-byte token IDs."""
         token_ids: list[int] = []
 
         for byte_value in pre_token.encode("utf-8"):
@@ -221,9 +221,9 @@ class Tokenizer:
 
         return token_ids
     
-    # 4. 实现执行BPE merges函数
+    # 4. Apply BPE merges
     def _apply_bpe_merges(self, token_ids: list[int]) -> list[int]:
-        """按训练优先级对一个 pre-token 执行全部可用 merge。"""
+        """Apply every available merge to one pre-token, in training order."""
         current_ids = list(token_ids)
 
         for token_id in current_ids:
@@ -259,14 +259,14 @@ class Tokenizer:
 
         return current_ids
 
-    # 5. 实现执行一次BPE merges函数
+    # 5. Apply one BPE merge
     def _merge_pair_once(
         self,
         token_ids: list[int],
         target_pair: tuple[bytes, bytes],
         merged_id: int,
     ) -> list[int]:
-        """从左到右合并当前序列中所有非重叠的目标 pair。"""
+        """Merge every non-overlapping occurrence of the target pair, left to right."""
         merged_ids: list[int] = []
         index = 0
 

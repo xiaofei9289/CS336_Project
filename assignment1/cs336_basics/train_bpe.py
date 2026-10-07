@@ -9,17 +9,17 @@ from .bpe import (
     select_best_pair,
 )
 
-# 训练 byte-level BPE Tokenizer 的步骤
+# Steps for training a byte-level BPE tokenizer
 
-# 步骤一：词表初始化
+# Step 1: initialize the vocabulary
 
-# 步骤二：合并 pair
+# Step 2: merge a pair
 
-# 步骤三：添加新 token
+# Step 3: add the new token
 
-# 步骤四：重复步骤二和步骤三，直到词表大小达到目标大小
+# Step 4: repeat steps 2 and 3 until the vocabulary reaches the target size
 
-# 步骤五：保存词表  
+# Step 5: save the vocabulary
 
 """
 def train_bpe(
@@ -29,28 +29,29 @@ def train_bpe(
     **kwargs,
 ) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
 
-    # 在给定语料上训练 byte-level BPE tokenizer。
+    # Train a byte-level BPE tokenizer on the given corpus.
 
     # Returns:
-    #    ``vocab``：token ID 到 token bytes 的映射。
-    #    ``merges``：按训练先后排列的 byte pair。
+    #    ``vocab``: map from token ID to token bytes.
+    #    ``merges``: byte pairs in the order they were learned.
 
-   # ``**kwargs`` 保留给 adapter 或后续性能优化参数，当前基础实现不使用。
+   # ``**kwargs`` is reserved for the adapter or later performance options.
+   # The basic implementation does not use it.
     
-    # 阶段一：初始化词表并把语料转换为 pre-token 频次表。
-    # 1. 初始化基础词表和特殊token
+    # Stage 1: initialize the vocabulary and turn the corpus into a pre-token frequency table.
+    # 1. Initialize the base vocabulary and special tokens
     vocab = initialize_vocab(
         vocab_size = vocab_size,
         special_tokens = special_tokens,
     )
     
-    # 2. 从磁盘中读取训练语料
+    # 2. Read the training corpus from disk
     with open(input_path, "r", encoding="utf-8") as file:
         input_text = file.read()
     
-    # 阶段二：反复选择全局最佳 pair，并将其加入词表。
+    # Stage 2: repeatedly select the globally best pair and add it to the vocabulary.
 
-    # 4. 按训练顺序保存byte pair
+    # 4. Save byte pairs in training order
     merges: list[tuple[bytes,bytes]] = []
 
 
@@ -63,27 +64,27 @@ def train_bpe(
         pretoken_counts
     )
 
-    # 6. 重复执行合并pair，直到词表大小达到目标大小
+    # 6. Keep merging pairs until the vocabulary reaches the target size
     while len(vocab) < vocab_size and pair_counts:
         best_pair = select_best_pair(
             pair_counts,
             vocab,
         )
 
-        # best_pair 是两个旧 token ID
+        # best_pair is two old token IDs
         left_token_bytes = vocab[best_pair[0]]
         right_token_bytes = vocab[best_pair[1]]
 
-        # 当前词表的 ID 连续，因此 len(vocab) 就是下一个 ID
+        # Vocabulary IDs are contiguous, so len(vocab) is the next ID
         new_token_id = max(vocab) + 1
 
-        # 创建新的合并 token
+        # Create the new merged token
         vocab[new_token_id] = (
             left_token_bytes
             + right_token_bytes
         )
 
-        # merges 保存 bytes pair，而不是 token ID pair
+        # merges stores the byte pair, not the token-ID pair
         merges.append(
             (left_token_bytes, right_token_bytes)
         )
@@ -104,17 +105,17 @@ def train_bpe(
 
 
 
-# 训练 byte-level BPE Tokenizer 的步骤
+# Steps for training a byte-level BPE tokenizer
 
-# 步骤一：词表初始化
+# Step 1: initialize the vocabulary
 
-# 步骤二：合并 pair
+# Step 2: merge a pair
 
-# 步骤三：添加新 token
+# Step 3: add the new token
 
-# 步骤四：重复步骤二和步骤三，直到词表大小达到目标大小
+# Step 4: repeat steps 2 and 3 until the vocabulary reaches the target size
 
-# 步骤五：保存词表  
+# Step 5: save the vocabulary
 
 
 def train_bpe(
@@ -124,26 +125,27 @@ def train_bpe(
     **kwargs,
 ) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
 
-    """在给定语料上训练 byte-level BPE tokenizer。
+    """Train a byte-level BPE tokenizer on the given corpus.
 
     Returns:
-        ``vocab``：token ID 到 token bytes 的映射。
-        ``merges``：按训练先后排列的 byte pair。
+        ``vocab``: map from token ID to token bytes.
+        ``merges``: byte pairs in the order they were learned.
 
-    ``desired_num_chunks`` 可通过 ``**kwargs`` 指定，控制读取语料时希望
-    切成多少块；当前仍按顺序逐块处理，不启用多进程。
+    ``desired_num_chunks`` may be passed through ``**kwargs``. It controls
+    how many chunks the corpus is split into. Chunks are still processed
+    sequentially; multiprocessing is not used.
     """
-    # 阶段一：初始化词表并把语料转换为 pre-token 频次表。
-    # 1. 初始化基础词表和特殊token
+    # Stage 1: initialize the vocabulary and turn the corpus into a pre-token frequency table.
+    # 1. Initialize the base vocabulary and special tokens
     vocab = initialize_vocab(
         vocab_size = vocab_size,
         special_tokens = special_tokens,
     )
 
-    # 2. 流式读取并预分词，避免把整份语料一次性解码成巨大的 str。
-    # 只有在 <|endoftext|> 也被声明为特殊 token 时，才能把它安全地
-    # 用作块边界：这样分块既不会切断普通 pre-token，它本身也不会进入
-    # 后面的 pair 统计。
+    # 2. Stream and pre-tokenize so the whole corpus is not decoded into one huge str.
+    # <|endoftext|> is a safe chunk boundary only when it is also a special token:
+    # chunks then do not cut ordinary pre-tokens, and the boundary itself does not
+    # enter later pair counts.
     split_special_token = "<|endoftext|>"
     desired_num_chunks = kwargs.get("desired_num_chunks", 4)
 
@@ -151,8 +153,8 @@ def train_bpe(
         raise ValueError("desired_num_chunks must be a positive integer")
 
     if split_special_token not in special_tokens:
-        # 没有安全的文档边界时不能任意按 byte 偏移切块，否则可能改变
-        # GPT-2 pre-tokenization 的结果。
+        # Without a safe document boundary, do not split on arbitrary byte offsets.
+        # That can change GPT-2 pre-tokenization.
         desired_num_chunks = 1
 
     pretoken_counts: Counter[tuple[int, ...]] = Counter()
@@ -174,39 +176,39 @@ def train_bpe(
             )
             pretoken_counts.update(chunk_pretoken_counts)
 
-            # 当前块已经汇总进总 Counter，可以立即释放。
+            # This chunk is already merged into the total Counter, so it can be released.
             del chunk_text, chunk_pretoken_counts
     
-    # 阶段二：反复选择全局最佳 pair，并将其加入词表。
+    # Stage 2: repeatedly select the globally best pair and add it to the vocabulary.
 
-    # 4. 按训练顺序保存byte pair
+    # 4. Save byte pairs in training order
     merges: list[tuple[bytes,bytes]] = []
 
     pair_counts, pair_to_pretokens = build_pair_index(
         pretoken_counts
     )
 
-    # 6. 重复执行合并pair，直到词表大小达到目标大小
+    # 6. Keep merging pairs until the vocabulary reaches the target size
     while len(vocab) < vocab_size and pair_counts:
         best_pair = select_best_pair(
             pair_counts,
             vocab,
         )
 
-        # best_pair 是两个旧 token ID
+        # best_pair is two old token IDs
         left_token_bytes = vocab[best_pair[0]]
         right_token_bytes = vocab[best_pair[1]]
 
-        # 当前词表的 ID 连续，因此 len(vocab) 就是下一个 ID
+        # Vocabulary IDs are contiguous, so len(vocab) is the next ID
         new_token_id = max(vocab) + 1
 
-        # 创建新的合并 token
+        # Create the new merged token
         vocab[new_token_id] = (
             left_token_bytes
             + right_token_bytes
         )
 
-        # merges 保存 bytes pair，而不是 token ID pair
+        # merges stores the byte pair, not the token-ID pair
         merges.append(
             (left_token_bytes, right_token_bytes)
         )

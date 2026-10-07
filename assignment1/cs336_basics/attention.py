@@ -17,40 +17,40 @@ def scaled_dot_product_attention(
     mask: Bool[Tensor, "... queries keys"] | None = None,
 ) -> Float[Tensor, "... queries d_v"]:
     """
-    计算 Scaled Dot-Product Attention。
+    Compute scaled dot-product attention.
 
     Attention(Q, K, V)
         = softmax(QK^T / sqrt(d_k)) V
 
-    参数形状：
+    Argument shapes:
         query: (..., queries, d_k)
         key:   (..., keys, d_k)
         value: (..., keys, d_v)
-        mask:  (..., queries, keys)，或者可以广播到该形状
+        mask:  (..., queries, keys), or broadcastable to that shape
 
-    返回形状：
+    Return shape:
         (..., queries, d_v)
     """
 
-    # Q 和 K 最后一维必须相同，
-    # 因为它们需要进行点积
+    # The last dimension of Q and K must match,
+    # because they are dotted together
     if query.shape[-1] != key.shape[-1]:
         raise ValueError(
-            "query 和 key 的最后一维必须相同，"
-            f"但得到了 {query.shape[-1]} 和 {key.shape[-1]}"
+            "The last dimensions of query and key must match, "
+            f"but got {query.shape[-1]} and {key.shape[-1]}"
         )
 
-    # Key 的数量必须与 Value 的数量相同
+    # The number of keys must match the number of values
     if key.shape[-2] != value.shape[-2]:
         raise ValueError(
-            "key 和 value 的序列长度必须相同，"
-            f"但得到了 {key.shape[-2]} 和 {value.shape[-2]}"
+            "The sequence lengths of key and value must match, "
+            f"but got {key.shape[-2]} and {value.shape[-2]}"
         )
 
-    # 1. 取得 d_k
+    # 1. Read d_k
     d_k = query.shape[-1]
 
-    # 2. 计算每个 Query 和每个 Key 的点积分数
+    # 2. Dot-product score between every query and every key
     #
     # query:             (..., queries, d_k)
     # key.transpose:     (..., d_k, keys)
@@ -59,24 +59,24 @@ def scaled_dot_product_attention(
         query @ key.transpose(-2, -1)
     )
 
-    # 3. 除以 sqrt(d_k)，防止分数过大
+    # 3. Divide by sqrt(d_k) so the scores do not get too large
     attention_scores = attention_scores / math.sqrt(d_k)
 
-    # 4. 在 Softmax 之前应用 mask
+    # 4. Apply the mask before softmax
     if mask is not None:
         mask = mask.to(
             device=attention_scores.device,
             dtype=torch.bool,
         )
 
-        # True  = 可以看
-        # False = 不可以看
+        # True  = allowed to attend
+        # False = not allowed to attend
         attention_scores = attention_scores.masked_fill(
             ~mask,
             float("-inf"),
         )
 
-    # 5. 对 keys 这一维做 Softmax
+    # 5. Softmax over the keys dimension
     #
     # attention_weights:
     # (..., queries, keys)
@@ -85,7 +85,7 @@ def scaled_dot_product_attention(
         dim=-1,
     )
 
-    # 6. 根据注意力权重对 Value 加权求和
+    # 6. Weighted sum of values using the attention weights
     #
     # attention_weights: (..., queries, keys)
     # value:              (..., keys, d_v)
@@ -98,12 +98,12 @@ def scaled_dot_product_attention(
 
 # class MultiHeadSelfAttention(nn.Module):
 #     """
-#     没有 RoPE、没有 causal mask 的多头自注意力。
+#     Multi-head self-attention without RoPE and without a causal mask.
 
-#     输入形状：
+#     Input shape:
 #         (..., seq_len, d_model)
 
-#     输出形状：
+#     Output shape:
 #         (..., seq_len, d_model)
 #     """
 
@@ -116,7 +116,7 @@ def scaled_dot_product_attention(
 #     ):
 #         super().__init__()
 
-#         # d_model 必须能够平均分给每一个 head
+#         # d_model must be evenly divisible across heads
 #         if d_model % num_heads != 0:
 #             raise ValueError(
 #                 f"d_model={d_model} must be divisible by "
@@ -127,7 +127,7 @@ def scaled_dot_product_attention(
 #         self.num_heads = num_heads
 #         self.head_dim = d_model // num_heads
 
-#         # Q、K、V 一次性投影出所有 head
+#         # Project Q, K, and V for every head in one shot
 #         self.q_proj = Linear(
 #             in_features=d_model,
 #             out_features=d_model,
@@ -149,7 +149,7 @@ def scaled_dot_product_attention(
 #             dtype=dtype,
 #         )
 
-#         # 拼接所有 head 后的输出投影
+#         # Output projection after concatenating every head
 #         self.o_proj = Linear(
 #             in_features=d_model,
 #             out_features=d_model,
@@ -159,14 +159,14 @@ def scaled_dot_product_attention(
 
 #     def split_heads(self, x: Tensor) -> Tensor:
 #         """
-#         把最后一个 d_model 维拆成：
+#         Split the last d_model dimension into:
 
 #             num_heads × head_dim
 
-#         输入：
+#         Input:
 #             (..., seq_len, d_model)
 
-#         输出：
+#         Output:
 #             (..., num_heads, seq_len, head_dim)
 #         """
 
@@ -183,7 +183,7 @@ def scaled_dot_product_attention(
 #             self.head_dim,
 #         )
 
-#         # 交换 seq_len 和 num_heads
+#         # Swap seq_len and num_heads
 #         #
 #         # (..., seq_len, num_heads, head_dim)
 #         #             ↓
@@ -194,29 +194,29 @@ def scaled_dot_product_attention(
 
 #     def merge_heads(self, x: Tensor) -> Tensor:
 #         """
-#         把多个 head 重新拼接成 d_model。
+#         Concatenate the heads back into d_model.
 
-#         输入：
+#         Input:
 #             (..., num_heads, seq_len, head_dim)
 
-#         输出：
+#         Output:
 #             (..., seq_len, d_model)
 #         """
 
 #         leading_shape = x.shape[:-3]
 #         seq_len = x.shape[-2]
 
-#         # split_heads 中 transpose 的逆操作
+#         # Inverse of the transpose in split_heads
 #         #
 #         # (..., num_heads, seq_len, head_dim)
 #         #             ↓
 #         # (..., seq_len, num_heads, head_dim)
 #         x = x.transpose(-3, -2)
 
-#         # transpose 后张量可能不连续
+#         # The tensor may be non-contiguous after transpose
 #         x = x.contiguous()
 
-#         # 拼接 num_heads 和 head_dim
+#         # Concatenate num_heads and head_dim
 #         #
 #         # (..., seq_len, num_heads, head_dim)
 #         #             ↓
@@ -231,21 +231,21 @@ def scaled_dot_product_attention(
 
 #     def forward(self, x: Tensor) -> Tensor:
 #         """
-#         输入：
+#         Input:
 #             x: (..., seq_len, d_model)
 
-#         输出：
+#         Output:
 #             (..., seq_len, d_model)
 #         """
 
 #         seq_len = x.shape[-2]
 
-#         # 1. 一次性生成全部 head 的 Q、K、V
+#         # 1. Produce Q, K, and V for every head in one shot
 #         q = self.q_proj(x)
 #         k = self.k_proj(x)
 #         v = self.v_proj(x)
 
-#         # 2. 拆分 head
+#         # 2. Split into heads
 #         #
 #         # (..., seq_len, d_model)
 #         #     ->
@@ -254,12 +254,12 @@ def scaled_dot_product_attention(
 #         k = self.split_heads(k)
 #         v = self.split_heads(v)
 
-#         # 3. 创建 causal mask
+#         # 3. Build the causal mask
 #         #
-#         # True：允许关注
-#         # False：禁止关注
+#         # True: attending is allowed
+#         # False: attending is forbidden
 #         #
-#         # seq_len = 3 时：
+#         # When seq_len = 3:
 #         #
 #         # [[ True, False, False],
 #         #  [ True,  True, False],
@@ -273,11 +273,11 @@ def scaled_dot_product_attention(
 #             )
 #         )
 
-#         # causal_mask 的形状是：
+#         # causal_mask has shape:
 #         #
 #         # (seq_len, seq_len)
 #         #
-#         # 它会自动广播到：
+#         # It broadcasts automatically to:
 #         #
 #         # (..., num_heads, seq_len, seq_len)
 #         attention_output = scaled_dot_product_attention(
@@ -287,10 +287,10 @@ def scaled_dot_product_attention(
 #             mask=causal_mask,
 #         )
 
-#         # 4. 拼回所有 head
+#         # 4. Merge the heads back together
 #         attention_output = self.merge_heads(attention_output)
 
-#         # 5. 输出投影
+#         # 5. Output projection
 #         output = self.o_proj(attention_output)
 
 #         return output
@@ -299,15 +299,15 @@ def scaled_dot_product_attention(
 
 class MultiHeadSelfAttention(nn.Module):
     """
-    同时支持：
+    Supports both:
 
-    1. 普通 causal MHA
-    2. 带 RoPE 的 causal MHA
+    1. Plain causal MHA
+    2. Causal MHA with RoPE
 
-    输入：
+    Input:
         (..., seq_len, d_model)
 
-    输出：
+    Output:
         (..., seq_len, d_model)
     """
 
@@ -332,7 +332,7 @@ class MultiHeadSelfAttention(nn.Module):
         self.num_heads = num_heads
         self.head_dim = d_model // num_heads
 
-        # 一次性生成所有 head 的 Q、K、V
+        # Project Q, K, and V for every head in one shot
         self.q_proj = Linear(
             in_features=d_model,
             out_features=d_model,
@@ -361,20 +361,20 @@ class MultiHeadSelfAttention(nn.Module):
             dtype=dtype,
         )
 
-        # theta 和 max_seq_len 都传入时，启用 RoPE
+        # Enable RoPE when both theta and max_seq_len are provided
         if theta is not None and max_seq_len is not None:
             self.rope = RotaryPositionalEmbedding(
                 theta=theta,
 
-                # 注意：这里是每个 head 的维度，
-                # 不是整个 d_model
+                # This is the per-head dimension,
+                # not the full d_model
                 d_k=self.head_dim,
 
                 max_seq_len=max_seq_len,
                 device=device,
             )
         elif theta is None and max_seq_len is None:
-            # 普通、不带 RoPE 的 MHA
+            # Plain MHA without RoPE
             self.rope = None
         else:
             raise ValueError(
@@ -384,10 +384,10 @@ class MultiHeadSelfAttention(nn.Module):
 
     def split_heads(self, x: Tensor) -> Tensor:
         """
-        输入：
+        Input:
             (..., seq_len, d_model)
 
-        输出：
+        Output:
             (..., num_heads, seq_len, head_dim)
         """
 
@@ -413,10 +413,10 @@ class MultiHeadSelfAttention(nn.Module):
 
     def merge_heads(self, x: Tensor) -> Tensor:
         """
-        输入：
+        Input:
             (..., num_heads, seq_len, head_dim)
 
-        输出：
+        Output:
             (..., seq_len, d_model)
         """
 
@@ -428,7 +428,7 @@ class MultiHeadSelfAttention(nn.Module):
         # (..., seq_len, num_heads, head_dim)
         x = x.transpose(-3, -2)
 
-        # transpose 后通常不是连续内存
+        # Memory is usually non-contiguous after transpose
         x = x.contiguous()
 
         # (..., seq_len, num_heads, head_dim)
@@ -454,35 +454,35 @@ class MultiHeadSelfAttention(nn.Module):
         token_positions:
             (..., seq_len)
 
-        例如测试可能传入：
+        Tests may pass, for example:
             (1, seq_len)
 
-        不应假设 token_positions 一定是：
+        Do not assume token_positions is always:
             [0, 1, 2, ..., seq_len - 1]
         """
 
         seq_len = x.shape[-2]
 
-        # 1. Q、K、V 一次性投影
+        # 1. Project Q, K, and V in one shot
         #
         # (..., seq_len, d_model)
         q = self.q_proj(x)
         k = self.k_proj(x)
         v = self.v_proj(x)
 
-        # 2. 拆分 head
+        # 2. Split into heads
         #
         # (..., num_heads, seq_len, head_dim)
         q = self.split_heads(q)
         k = self.split_heads(k)
         v = self.split_heads(v)
 
-        # 3. 仅对 Q、K 使用 RoPE
+        # 3. Apply RoPE only to Q and K
         #
-        # V 不进行旋转
+        # V is not rotated
         if self.rope is not None:
             if token_positions is None:
-                # 只有未显式传入位置时，才默认使用连续位置
+                # Use contiguous positions only when none were passed in
                 token_positions = torch.arange(
                     seq_len,
                     device=x.device,
@@ -498,10 +498,10 @@ class MultiHeadSelfAttention(nn.Module):
                 token_positions,
             )
 
-        # 4. 创建 causal mask
+        # 4. Build the causal mask
         #
-        # True：允许关注
-        # False：不能关注
+        # True: attending is allowed
+        # False: attending is not allowed
         causal_mask = torch.tril(
             torch.ones(
                 seq_len,
@@ -511,7 +511,7 @@ class MultiHeadSelfAttention(nn.Module):
             )
         )
 
-        # 5. 每个 head 计算 SDPA
+        # 5. Run SDPA in every head
         #
         # (..., num_heads, seq_len, head_dim)
         attention_output = scaled_dot_product_attention(
@@ -521,14 +521,14 @@ class MultiHeadSelfAttention(nn.Module):
             mask=causal_mask,
         )
 
-        # 6. 拼接所有 head
+        # 6. Concatenate every head
         #
         # (..., seq_len, d_model)
         attention_output = self.merge_heads(
             attention_output
         )
 
-        # 7. 输出投影
+        # 7. Output projection
         output = self.output_proj(attention_output)
 
         return output

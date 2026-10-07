@@ -49,7 +49,7 @@ def find_chunk_boundaries(
     return sorted(set(chunk_boundaries))
 
 """
-本人注释
+Notes
 ## Usage
 with open(..., "rb") as f:
     num_processes = 4

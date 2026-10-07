@@ -1,0 +1,40 @@
+# FSDP correctness (2026-09-29)
+# Machine: AutoDL autodl-container-0k07c6dhtz-22e6acd7, conda base
+# 2x RTX PRO 6000, PyTorch 2.11.0+cu128
+# Command: python -m pytest -q tests/test_fsdp.py
+# Repeated 5 times.
+
+=== run 1 ===
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+4 passed in 22.12s
+
+=== run 2 ===
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+4 passed in 22.48s
+
+=== run 3 ===
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+4 passed in 22.05s
+
+=== run 4 ===
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+4 passed in 21.70s
+
+=== run 5 ===
+tests/test_fsdp.py::test_fsdp_correctness[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_correctness[fp16] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp32] PASSED
+tests/test_fsdp.py::test_fsdp_gradient_sync[fp16] PASSED
+4 passed in 21.28s

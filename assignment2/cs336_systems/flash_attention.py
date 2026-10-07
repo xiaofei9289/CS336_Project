@@ -17,6 +17,31 @@ Q_TILE_SIZE = 16
 K_TILE_SIZE = 16
 
 
+def choose_flash_tiles(n_queries, n_keys, head_dim):
+    """Pick power-of-two tiles that divide both lengths.
+
+    Short, narrow inputs stay at 16. Wider heads and longer sequences use a
+    larger tile so the FP32 d=128 forward is not stuck on 16x16 GEMMs.
+    """
+    length = max(n_queries, n_keys)
+    if head_dim >= 128:
+        cap = 64
+    elif length >= 1024:
+        cap = 128
+    elif length >= 256:
+        cap = 32
+    else:
+        cap = 16
+
+    def grow(size):
+        tile = 16
+        while tile * 2 <= cap and size % (tile * 2) == 0:
+            tile *= 2
+        return tile
+
+    return grow(n_queries), grow(n_keys)
+
+
 class FlashAttentionPyTorch(torch.autograd.Function):
     @staticmethod
     def forward(ctx, Q, K, V, is_causal=False):
@@ -177,8 +202,9 @@ class FlashAttentionTriton(torch.autograd.Function):
         n_keys = K.shape[-2]
         O = torch.empty_like(Q)
         L = torch.empty(batch_size, n_queries, device=Q.device, dtype=torch.float32)
+        q_tile, k_tile = choose_flash_tiles(n_queries, n_keys, d)
 
-        flash_fwd_kernel[(triton.cdiv(n_queries, Q_TILE_SIZE), batch_size)](
+        flash_fwd_kernel[(triton.cdiv(n_queries, q_tile), batch_size)](
             Q, K, V, O, L,
             Q.stride(0), Q.stride(1), Q.stride(2),
             K.stride(0), K.stride(1), K.stride(2),
@@ -188,9 +214,10 @@ class FlashAttentionTriton(torch.autograd.Function):
             n_queries, n_keys,
             1.0 / math.sqrt(d),
             d,
-            Q_TILE_SIZE,
-            K_TILE_SIZE,
+            q_tile,
+            k_tile,
             is_causal,
+            num_warps=4 if max(q_tile, k_tile) <= 32 else 8,
         )
         ctx.save_for_backward(L, Q, K, V, O)
         ctx.is_causal = is_causal

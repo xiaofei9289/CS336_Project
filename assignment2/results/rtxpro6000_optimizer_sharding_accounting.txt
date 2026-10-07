@@ -1,0 +1,27 @@
+# Optimizer-state-sharding accounting (2026-09-29)
+# Machine: AutoDL 2x RTX PRO 6000 Blackwell Server Edition
+# PyTorch 2.11.0+cu128, NCCL, conda base
+# Script: python -m cs336_systems.benchmark_optimizer_sharding
+# Config: xl, context 512, global batch 4, local batch 2, world_size 2
+# No DDP. Each rank runs forward/backward on its own slice. Gradients are not all-reduced.
+# peak is max_memory_allocated since the previous reset; allocated is memory_allocated at the label.
+# GiB = bytes / 1024**3
+
+memory | adamw | 1 node x 2 GPUs | xl | context 512 | global batch 4 | local batch 2
+rank 0 | adamw   | after_init  | peak 12.817 GiB | allocated 12.817 GiB | params 12.691 | grads 0.000 | adam 0.000
+rank 1 | adamw   | after_init  | peak 12.817 GiB | allocated 12.817 GiB | params 12.691 | grads 0.000 | adam 0.000
+rank 0 | adamw   | before_step | peak 26.666 GiB | allocated 25.525 GiB | params 12.691 | grads 12.691 | adam 0.000
+rank 1 | adamw   | before_step | peak 26.666 GiB | allocated 25.525 GiB | params 12.691 | grads 12.691 | adam 0.000
+rank 0 | adamw   | after_step  | peak 63.756 GiB | allocated 50.939 GiB | params 12.691 | grads 12.691 | adam 25.383
+rank 1 | adamw   | after_step  | peak 63.756 GiB | allocated 50.939 GiB | params 12.691 | grads 12.691 | adam 25.383
+
+memory | sharded | 1 node x 2 GPUs | xl | context 512 | global batch 4 | local batch 2
+rank 0 | sharded | after_init  | peak 12.817 GiB | allocated 12.817 GiB | params 12.691 | grads 0.000 | adam 0.000
+rank 1 | sharded | after_init  | peak 12.817 GiB | allocated 12.817 GiB | params 12.691 | grads 0.000 | adam 0.000
+rank 0 | sharded | before_step | peak 26.666 GiB | allocated 25.525 GiB | params 12.691 | grads 12.691 | adam 0.000
+rank 1 | sharded | before_step | peak 26.666 GiB | allocated 25.525 GiB | params 12.691 | grads 12.691 | adam 0.000
+rank 0 | sharded | after_step  | peak 44.850 GiB | allocated 38.408 GiB | params 12.691 | grads 12.691 | adam 12.882
+rank 1 | sharded | after_step  | peak 44.276 GiB | allocated 38.026 GiB | params 12.691 | grads 12.691 | adam 12.501
+
+timing | adamw | 1 node x 2 GPUs | xl | local batch 2 | 639.069 ms/step
+timing | sharded | 1 node x 2 GPUs | xl | local batch 2 | 827.633 ms/step

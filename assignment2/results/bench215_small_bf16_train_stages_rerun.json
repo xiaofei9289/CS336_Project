@@ -1,0 +1,120 @@
+{
+  "config": {
+    "mode": "train",
+    "timing": "stages",
+    "model_size": "small",
+    "batch_size": 4,
+    "context_length": 512,
+    "sequence_length": 512,
+    "vocab_size": 10000,
+    "rope_theta": 10000.0,
+    "warmup_steps": 5,
+    "measurement_steps": 10,
+    "lr": 0.001,
+    "seed": 42,
+    "inference": false,
+    "precision": "bf16",
+    "memory_snapshot": null,
+    "compile": false,
+    "results_json": "results/bench215_small_bf16_train_stages_rerun.json",
+    "optimizer_class": null,
+    "nvtx": false,
+    "checkpoint_size": 0,
+    "d_model": 768,
+    "d_ff": 3072,
+    "num_layers": 12,
+    "num_heads": 12
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "torch_version": "2.11.0+cu128",
+  "cuda_version": "12.8",
+  "execution_mode": "eager",
+  "compile_scope": null,
+  "compile_settings": null,
+  "tf32_matmul": false,
+  "tf32_cudnn": true,
+  "zero_grad_in_timing": false,
+  "measurement_name": "forward + loss + backward + optimizer (excluding zero_grad)",
+  "parameter_count": 128625408,
+  "optimizer": "torch.optim.adamw.AdamW",
+  "baseline_allocated_mib": 2009.85546875,
+  "peak_allocated_mib": 4214.56494140625,
+  "peak_reserved_mib": 4466.0,
+  "timings_ms": {
+    "forward": [
+      12.98353262245655,
+      19.142284989356995,
+      20.300001837313175,
+      21.129067055881023,
+      21.16044331341982,
+      22.175285033881664,
+      26.041253469884396,
+      22.146955132484436,
+      23.291097953915596,
+      23.525457829236984
+    ],
+    "loss": [
+      0.13432372361421585,
+      0.15430711209774017,
+      0.1584785059094429,
+      0.16230251640081406,
+      0.16376469284296036,
+      0.1664925366640091,
+      0.20439177751541138,
+      0.16291439533233643,
+      0.1674313098192215,
+      0.16718823462724686
+    ],
+    "backward": [
+      33.05384982377291,
+      32.600403763353825,
+      35.44223215430975,
+      34.35774613171816,
+      36.19846701622009,
+      39.56316690891981,
+      36.69804986566305,
+      37.761871702969074,
+      41.49916209280491,
+      37.93990518897772
+    ],
+    "optimizer": [
+      7.8362636268138885,
+      8.004233241081238,
+      8.01839679479599,
+      8.027616888284683,
+      8.125162683427334,
+      8.048892952501774,
+      8.185533806681633,
+      8.126821368932724,
+      8.09585303068161,
+      8.09171237051487
+    ]
+  },
+  "timing_summary_ms": {
+    "forward": {
+      "mean": 21.189537923783064,
+      "std": 3.280641864575853,
+      "min": 12.98353262245655,
+      "max": 26.041253469884396
+    },
+    "loss": {
+      "mean": 0.16415948048233986,
+      "std": 0.01633593746092554,
+      "min": 0.13432372361421585,
+      "max": 0.20439177751541138
+    },
+    "backward": {
+      "mean": 36.51148546487093,
+      "std": 2.663832076504092,
+      "min": 32.600403763353825,
+      "max": 41.49916209280491
+    },
+    "optimizer": {
+      "mean": 8.056048676371574,
+      "std": 0.09092620477318891,
+      "min": 7.8362636268138885,
+      "max": 8.185533806681633
+    }
+  },
+  "memory_scope": "Total CUDA allocator memory during measurement, including backward when enabled; not activation-only"
+}

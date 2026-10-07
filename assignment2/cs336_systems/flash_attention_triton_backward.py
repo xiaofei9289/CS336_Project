@@ -30,8 +30,8 @@ from cs336_systems.flash_attention import FlashAttentionTriton
 
 
 # ============================================================
-# 1. 预计算 D：每个 query 行只有一个 FP32 标量。
-#    Python 包装保证传入内核的张量连续，因此使用简单的偏移计算。
+# 1. Precompute D: one FP32 scalar per query row.
+#    The Python wrapper passes contiguous tensors, so offsets stay simple.
 # ============================================================
 
 @triton.jit
@@ -76,8 +76,8 @@ def _flash_bwd_delta_kernel(
 
 
 # ============================================================
-# 2. 每个程序实例固定一个 key tile，遍历所有 query tiles。
-#    当前实例独占对应的 dK/dV 输出块，无需 atomic_add。
+# 2. Each program owns one key tile and loops over query tiles.
+#    That program exclusively writes its dK/dV block, so no atomic_add.
 # ============================================================
 
 @triton.jit
@@ -119,7 +119,7 @@ def _flash_bwd_dkdv_kernel(
         & (dim_indices[None, :] < HEAD_DIM)
     )
 
-    # K、V 在本实例中固定，只加载一次。
+    # K and V are fixed for this program and loaded once.
     k = tl.load(K_ptr + kv_offsets, mask=kv_valid, other=0).to(tl.float32)
     v = tl.load(V_ptr + kv_offsets, mask=kv_valid, other=0).to(tl.float32)
 
@@ -157,10 +157,10 @@ def _flash_bwd_dkdv_kernel(
 
         if is_causal:
             allowed = query_indices[:, None] >= key_indices[None, :]
-            # 与已有前向一致：因果位置加 -1e6。
+            # Match the existing forward: add -1e6 on causal positions.
             scores = scores + tl.where(allowed, 0.0, -1e6)
 
-        # 越界 query/key 的概率必须为零；-inf 仅用于边界补齐。
+        # Out-of-range query/key positions must have probability zero; -inf is only padding.
         score_valid = (
             (query_indices[:, None] < N_QUERIES)
             & (key_indices[None, :] < N_KEYS)
@@ -179,7 +179,7 @@ def _flash_bwd_dkdv_kernel(
         dp = tl.dot(do, tl.trans(v), input_precision="ieee")
         ds = p * (dp - delta[:, None])
 
-        # 先累加，最后统一乘 scale。
+        # Accumulate first, then multiply by scale once.
         dk_acc = tl.dot(
             tl.trans(ds), q,
             acc=dk_acc,
@@ -199,8 +199,8 @@ def _flash_bwd_dkdv_kernel(
 
 
 # ============================================================
-# 3. 每个程序实例固定一个 query tile，遍历所有 key tiles。
-#    重新计算 P，当前实例独占对应的 dQ 输出块。
+# 3. Each program owns one query tile and loops over key tiles.
+#    P is recomputed. That program exclusively writes its dQ block.
 # ============================================================
 
 @triton.jit
@@ -303,7 +303,7 @@ def _flash_bwd_dq_kernel(
 
 
 # ============================================================
-# Python 只负责输入布局、分配输出和启动内核。
+# Python only fixes layout, allocates outputs, and launches kernels.
 # ============================================================
 
 def flash_backward_triton(
@@ -319,20 +319,20 @@ def flash_backward_triton(
     key_tile_size=32,
 ):
     if not Q.is_cuda:
-        raise ValueError("Triton backward 需要 CUDA 张量")
+        raise ValueError("Triton backward requires CUDA tensors")
     if Q.dtype not in (torch.float16, torch.bfloat16, torch.float32):
-        raise ValueError("Triton backward 支持 FP16、BF16 和 FP32")
+        raise ValueError("Triton backward supports FP16, BF16, and FP32")
     if O.shape != Q.shape or dO.shape != Q.shape:
-        raise ValueError("O、dO 的形状必须与 Q 一致")
+        raise ValueError("O and dO must have the same shape as Q")
     if L.shape != Q.shape[:-1]:
-        raise ValueError("L 的形状必须为 Q.shape[:-1]")
+        raise ValueError("L must have shape Q.shape[:-1]")
     if any(t.device != Q.device for t in (O, dO, L)):
-        raise ValueError("所有张量必须位于同一设备")
+        raise ValueError("all tensors must be on the same device")
     if O.dtype != Q.dtype or dO.dtype != Q.dtype or L.dtype != torch.float32:
-        raise ValueError("O/dO 应与 Q 同 dtype，L 应为 FP32")
+        raise ValueError("O and dO must match Q's dtype, and L must be FP32")
     for tile_size in (query_tile_size, key_tile_size):
         if tile_size < 16 or tile_size & (tile_size - 1):
-            raise ValueError("tile size 必须是不小于 16 的 2 的幂")
+            raise ValueError("tile size must be a power of two and at least 16")
 
     batch_shape = Q.shape[:-2]
     batch_size = math.prod(batch_shape)
@@ -340,7 +340,7 @@ def flash_backward_triton(
     n_keys = K.shape[-2]
     head_dim = Q.shape[-1]
 
-    # 非连续输入只产生线性大小的布局副本，不产生 NxN 张量。
+    # Non-contiguous inputs get a linear-sized layout copy, not an N by N tensor.
     q = Q.contiguous().view(batch_size, n_queries, head_dim)
     k = K.contiguous().view(batch_size, n_keys, head_dim)
     v = V.contiguous().view(batch_size, n_keys, head_dim)
@@ -376,10 +376,13 @@ def flash_backward_triton(
         scale=1.0 / math.sqrt(head_dim),
         is_causal=is_causal,
         num_warps=4,
+        # RTX PRO 6000 reports 101376 bytes of shared memory. Tile 32 and the
+        # default pipeline stages ask for 102912.
+        num_stages=1,
     )
 
     with torch.cuda.device(Q.device):
-        # 同一 stream 按顺序执行，无需在内核之间手动 synchronize。
+        # Kernels run in order on one stream, so no manual synchronize between them.
         _flash_bwd_delta_kernel[query_grid](
             o,
             do,
@@ -418,7 +421,7 @@ def flash_backward_triton(
 
 
 # ============================================================
-# 复用已有 Triton 前向，仅替换 backward。
+# Reuse the existing Triton forward and replace only the backward.
 # ============================================================
 
 class FlashAttentionTritonFull(FlashAttentionTriton):

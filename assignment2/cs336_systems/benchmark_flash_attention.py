@@ -39,7 +39,8 @@ FIELDS = [
     "batch_size", "seq_len", "dim", "dtype", "causal", "tf32_matmul", "seed",
     "warmup_steps", "warmup_ms", "rep_ms", "timing_method", "backward_method",
     "status", "failure_phase", "forward_status", "backward_status",
-    "forward_backward_status", "forward_ms", "backward_ms", "forward_backward_ms",
+    "forward_backward_status", "q_tile", "k_tile",
+    "forward_ms", "backward_ms", "forward_backward_ms",
     "error", "child_returncode",
 ]
 
@@ -91,6 +92,7 @@ def new_row(args, implementation, dtype, length, dim):
         "status": "ERROR", "failure_phase": "setup",
         "forward_status": "NOT_RUN", "backward_status": "NOT_RUN",
         "forward_backward_status": "NOT_RUN",
+        "q_tile": "", "k_tile": "",
     }
 
 
@@ -100,7 +102,7 @@ def prepare_config(torch, row):
     if row["implementation"] == "pytorch":
         from cs336_basics.model import scaled_dot_product_attention
     else:
-        from cs336_systems.flash_attention import FlashAttentionTriton
+        from cs336_systems.flash_attention import FlashAttentionTriton, choose_flash_tiles
 
     row["failure_phase"] = "input_allocation"
     length, dim = row["seq_len"], row["dim"]
@@ -123,6 +125,10 @@ def prepare_config(torch, row):
         def forward():
             return scaled_dot_product_attention(q, k, v, mask=causal_mask)
     else:
+        q_tile, k_tile = choose_flash_tiles(length, length, dim)
+        row["q_tile"] = q_tile
+        row["k_tile"] = k_tile
+
         def forward():
             return FlashAttentionTriton.apply(q, k, v, True)
 
@@ -209,6 +215,14 @@ def measure_config(args):
         for name in ("forward", "backward", "forward_backward"):
             if row[f"{name}_status"] == "RUNNING":
                 row[f"{name}_status"] = row["status"]
+        # Forward+backward includes backward. If backward already ran out of
+        # memory, that combined measurement cannot succeed.
+        if (
+            oom
+            and row["backward_status"] == "OOM"
+            and row["forward_backward_status"] == "NOT_RUN"
+        ):
+            row["forward_backward_status"] = "OOM"
 
     # CPU-only write after an error; process exit releases all GPU allocations.
     args.result_json.write_text(json.dumps(row, ensure_ascii=False), encoding="utf-8")
